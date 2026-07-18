@@ -35,21 +35,31 @@ def token_required(f):
         return f(*args, **kwargs)
     return decorated
 
+def non_prestador_required(f):
+    """Bloqueia role='prestador' — usar depois de @token_required, que já populou g.user."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if g.user.get('role') == 'prestador':
+            return jsonify({'erro': 'Acesso negado para este papel de usuário.'}), 403
+        return f(*args, **kwargs)
+    return decorated
+
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.headers.get('Authorization')
         if not token:
             return jsonify({'erro': 'Token ausente!'}), 401
-            
+
         try:
             if token.startswith('Bearer '):
                 token = token.split(" ")[1]
             data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             if not data.get('is_admin'):
                 return jsonify({'erro': 'Acesso negado. Apenas administradores!'}), 403
+            g.user = data
         except:
             return jsonify({'erro': 'Token inválido!'}), 401
-            
+
         return f(*args, **kwargs)
     return decorated

@@ -9,15 +9,16 @@ def create_projetos_tables(cursor):
         CREATE TABLE IF NOT EXISTS projetos (
             id SERIAL PRIMARY KEY,
             nome VARCHAR(255) NOT NULL,
-            colunas TEXT
+            colunas TEXT,
+            empresa_id INTEGER NOT NULL REFERENCES empresas(id)
         )
     ''')
 
-    # Garantir que existe ao menos um projeto para as chaves estrangeiras
+    # Garantir que existe ao menos um projeto para as chaves estrangeiras, vinculado à empresa seed (id=1)
     cursor.execute("SELECT COUNT(*) FROM projetos")
     default_cols = '[{"name":"data","label":"Data","type":"text"},{"name":"categoria","label":"Categoria","type":"select"},{"name":"item","label":"Item / Descrição","type":"text"},{"name":"fornecedor","label":"Fornecedor","type":"text"},{"name":"quantidade","label":"Qtd","type":"number"},{"name":"unitario","label":"Unitário (R$)","type":"text"},{"name":"valor","label":"Valor Pago (R$)","type":"text"},{"name":"forma","label":"Forma","type":"select"},{"name":"conta","label":"Conta","type":"select"},{"name":"obs","label":"Observações","type":"textarea"}]'
     if cursor.fetchone()[0] == 0:
-        cursor.execute("INSERT INTO projetos (id, nome, colunas) VALUES (1, 'Obra Itanhaém', ?)", (default_cols,))
+        cursor.execute("INSERT INTO projetos (id, nome, colunas, empresa_id) VALUES (1, 'Obra Itanhaém', ?, 1)", (default_cols,))
         # Sincroniza a sequência
         cursor.execute("SELECT setval(pg_get_serial_sequence('projetos', 'id'), COALESCE((SELECT MAX(id) FROM projetos), 1))")
     else:

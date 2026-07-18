@@ -190,6 +190,7 @@ def get_db_connection():
     conn = _db_pool.getconn()
     return PostgreSQLConnectionWrapper(conn, _db_pool)
 
+from app.database.modelEmpresas import create_empresas_tables
 from app.database.modelProjetos import create_projetos_tables
 from app.database.modelCategoria import create_categorias_tables
 from app.database.modelUsuarios import create_usuarios_tables
@@ -203,8 +204,9 @@ def init_db():
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     # Executa a criação de cada tabela na ordem de dependência correta
+    create_empresas_tables(cursor)
     create_projetos_tables(cursor)
     create_usuarios_tables(cursor)
     create_categorias_tables(cursor)

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from app.controller.usuarios_controller import (
     get_todos_usuarios, criar_usuario, deletar_usuario
 )
@@ -9,7 +9,7 @@ usuarios_bp = Blueprint('usuarios', __name__)
 @usuarios_bp.route('/usuarios', methods=['GET'])
 @admin_required
 def listar_usuarios():
-    return jsonify(get_todos_usuarios()), 200
+    return jsonify(get_todos_usuarios(g.user['empresa_id'])), 200
 
 @usuarios_bp.route('/usuarios', methods=['POST'])
 @admin_required
@@ -23,7 +23,7 @@ def novo_usuario():
     if not username or not password:
         return jsonify({'erro': 'Username e senha são obrigatórios'}), 400
 
-    res = criar_usuario(username, password, is_admin, role)
+    res = criar_usuario(username, password, g.user['empresa_id'], is_admin, role)
     if 'erro' in res:
         return jsonify(res), 400
         
@@ -32,6 +32,6 @@ def novo_usuario():
 @usuarios_bp.route('/usuarios/<int:id>', methods=['DELETE'])
 @admin_required
 def remover_usuario(id):
-    if deletar_usuario(id):
+    if deletar_usuario(id, g.user['empresa_id']):
         return jsonify({'mensagem': 'Usuário removido'}), 200
     return jsonify({'erro': 'Não foi possível remover o usuário'}), 400

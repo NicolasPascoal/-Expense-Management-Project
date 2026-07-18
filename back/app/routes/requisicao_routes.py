@@ -12,7 +12,11 @@ def listar_requisicoes():
     cursor = conn.cursor()
     
     if user.get('is_admin'):
-        cursor.execute('SELECT r.*, u.username FROM requisicoes_materiais r JOIN usuarios u ON r.usuario_id = u.id ORDER BY data_criacao DESC')
+        cursor.execute(
+            'SELECT r.*, u.username FROM requisicoes_materiais r JOIN usuarios u ON r.usuario_id = u.id '
+            'WHERE u.empresa_id = ? ORDER BY data_criacao DESC',
+            (user['empresa_id'],)
+        )
     else:
         cursor.execute('SELECT r.*, u.username FROM requisicoes_materiais r JOIN usuarios u ON r.usuario_id = u.id WHERE r.usuario_id = ? ORDER BY data_criacao DESC', (user['id'],))
         
@@ -52,11 +56,18 @@ def atualizar_status(id):
     
     if not status:
         return jsonify({'erro': 'Status é obrigatório'}), 400
-        
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('UPDATE requisicoes_materiais SET status = ? WHERE id = ?', (status, id))
+    cursor.execute(
+        'UPDATE requisicoes_materiais SET status = ? '
+        'WHERE id = ? AND usuario_id IN (SELECT id FROM usuarios WHERE empresa_id = ?)',
+        (status, id, g.user['empresa_id'])
+    )
+    atualizado = cursor.rowcount > 0
     conn.commit()
     conn.close()
-    
+
+    if not atualizado:
+        return jsonify({'erro': 'Não encontrado'}), 404
     return jsonify({'mensagem': 'Status atualizado'})

@@ -24,17 +24,19 @@ def login_usuario(username, password):
             'username': usuario['username'],
             'is_admin': usuario['is_admin'],
             'role': usuario['role'],
+            'empresa_id': usuario['empresa_id'],
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
         }, SECRET_KEY, algorithm="HS256")
-        
+
         return {
             'token': token,
             'user': {
                 'id': usuario['id'],
                 'username': usuario['username'],
                 'is_admin': bool(usuario['is_admin']),
-                'role': usuario['role']
+                'role': usuario['role'],
+                'empresa_id': usuario['empresa_id']
             }
         }
-    
+
     return None

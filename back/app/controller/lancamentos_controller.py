@@ -1,16 +1,24 @@
 from app.database.db import get_db_connection
 import json
 
-def get_todos_lancamentos(projeto_id=None):
+def get_todos_lancamentos(empresa_id, projeto_id=None):
     conn = get_db_connection()
     cursor = conn.cursor()
     if projeto_id:
-        cursor.execute("SELECT * FROM lancamentos_v2 WHERE projeto_id = ?", (projeto_id,))
+        cursor.execute('''
+            SELECT l.* FROM lancamentos_v2 l
+            JOIN projetos p ON l.projeto_id = p.id
+            WHERE l.projeto_id = ? AND p.empresa_id = ?
+        ''', (projeto_id, empresa_id))
     else:
-        cursor.execute("SELECT * FROM lancamentos_v2")
+        cursor.execute('''
+            SELECT l.* FROM lancamentos_v2 l
+            JOIN projetos p ON l.projeto_id = p.id
+            WHERE p.empresa_id = ?
+        ''', (empresa_id,))
     linhas = cursor.fetchall()
     conn.close()
-    
+
     resultado = []
     for linha in linhas:
         item = dict(linha)
@@ -24,10 +32,14 @@ def get_todos_lancamentos(projeto_id=None):
         resultado.append(item)
     return resultado
 
-def get_lancamento_por_id(id):
+def get_lancamento_por_id(id, empresa_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM lancamentos_v2 WHERE id = ?", (id,))
+    cursor.execute('''
+        SELECT l.* FROM lancamentos_v2 l
+        JOIN projetos p ON l.projeto_id = p.id
+        WHERE l.id = ? AND p.empresa_id = ?
+    ''', (id, empresa_id))
     linha = cursor.fetchone()
     conn.close()
     if linha:
@@ -40,7 +52,8 @@ def get_lancamento_por_id(id):
         return item
     return None
 
-def criar_lancamento(projeto_id, dados):
+def criar_lancamento(projeto_id, dados, empresa_id):
+    """O chamador (rota) deve validar antes que projeto_id pertence a empresa_id."""
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
@@ -50,27 +63,27 @@ def criar_lancamento(projeto_id, dados):
     conn.commit()
     novo_id = cursor.lastrowid
     conn.close()
-    return get_lancamento_por_id(novo_id)
+    return get_lancamento_por_id(novo_id, empresa_id)
 
-def atualizar_lancamento(id, dados):
+def atualizar_lancamento(id, dados, empresa_id):
+    if get_lancamento_por_id(id, empresa_id) is None:
+        return None
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
-        UPDATE lancamentos_v2 
+        UPDATE lancamentos_v2
         SET dados=?
         WHERE id = ?
     ''', (json.dumps(dados), id))
     conn.commit()
     conn.close()
-    return get_lancamento_por_id(id)
+    return get_lancamento_por_id(id, empresa_id)
 
-def deletar_lancamento(id):
+def deletar_lancamento(id, empresa_id):
+    if get_lancamento_por_id(id, empresa_id) is None:
+        return False
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id FROM lancamentos_v2 WHERE id = ?", (id,))
-    if cursor.fetchone() is None:
-        conn.close()
-        return False
     cursor.execute("DELETE FROM lancamentos_v2 WHERE id = ?", (id,))
     conn.commit()
     conn.close()

@@ -17,3 +17,6 @@ gunicorn==22.0.0
 
 # Production Server (Windows)
 waitress==3.0.2
+
+# Testes automatizados (ADR-001 — ver docs/Decisions.md)
+pytest==8.3.3

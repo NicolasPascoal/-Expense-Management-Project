@@ -11,14 +11,15 @@ def create_usuarios_tables(cursor):
             username VARCHAR(255) NOT NULL UNIQUE,
             password VARCHAR(255) NOT NULL,
             is_admin INTEGER DEFAULT 0,
-            role VARCHAR(50) DEFAULT 'prestador'
+            role VARCHAR(50) DEFAULT 'prestador',
+            empresa_id INTEGER NOT NULL REFERENCES empresas(id)
         )
     ''')
 
-    # Seed inicial admin
+    # Seed inicial admin, vinculado à empresa seed (id=1)
     cursor.execute("SELECT COUNT(*) FROM usuarios")
     if cursor.fetchone()[0] == 0:
-        cursor.execute("INSERT INTO usuarios (username, password, is_admin, role) VALUES ('admin', ?, 1, 'admin')", 
+        cursor.execute("INSERT INTO usuarios (username, password, is_admin, role, empresa_id) VALUES ('admin', ?, 1, 'admin', 1)",
                        (generate_password_hash("admin"),))
         cursor.execute("SELECT setval(pg_get_serial_sequence('usuarios', 'id'), COALESCE((SELECT MAX(id) FROM usuarios), 1))")
     else:
