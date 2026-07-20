@@ -26,6 +26,7 @@ export function useExpenses() {
   const [requisicoes, setRequisicoes] = useState([]);
   const [tarefas, setTarefas] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
+  const [orcamentos, setOrcamentos] = useState([]);
 
   // Inatividade (15 minutos)
   const TIMEOUT_MS = 15 * 60 * 1000;
@@ -159,6 +160,7 @@ export function useExpenses() {
   useEffect(() => {
     if (token && projetoAtivo) {
       fetchServicos();
+      fetchOrcamentos();
     }
   }, [projetoAtivo, token]);
 
@@ -173,6 +175,26 @@ export function useExpenses() {
       setContasDb(ctas);
     } catch (err) {
       console.error("Erro ao buscar serviços:", err);
+    }
+  };
+
+  const fetchOrcamentos = async () => {
+    if (!projetoAtivo) return;
+    try {
+      const res = await api.getOrcamentos(projetoAtivo.id);
+      setOrcamentos(res);
+    } catch (err) {
+      console.error("Erro ao buscar orçamentos:", err);
+    }
+  };
+
+  const salvarOrcamento = async (categoriaId, valorOrcado) => {
+    if (!projetoAtivo) return;
+    try {
+      await api.upsertOrcamento(projetoAtivo.id, categoriaId, valorOrcado);
+      fetchOrcamentos();
+    } catch (err) {
+      alert("Erro ao salvar orçamento: " + err.message);
     }
   };
 
@@ -281,6 +303,25 @@ export function useExpenses() {
     });
     return Object.entries(m).sort((a,b)=>b[1]-a[1]);
   },[dados]);
+
+  const orcadoRealizado = useMemo(() => {
+    const realizadoPorCategoria = Object.fromEntries(porCategoria);
+    return orcamentos.map(o => {
+      const realizado = realizadoPorCategoria[o.categoria_nome] || 0;
+      const orcado = parseVal(o.valor_orcado);
+      const percentual = orcado > 0 ? (realizado / orcado) * 100 : 0;
+      const status = percentual > 100 ? "estourado" : percentual >= 90 ? "atencao" : "ok";
+      return {
+        categoriaId: o.categoria_id,
+        categoria: o.categoria_nome,
+        orcado,
+        realizado,
+        saldo: orcado - realizado,
+        percentual,
+        status
+      };
+    }).sort((a, b) => b.percentual - a.percentual);
+  }, [orcamentos, porCategoria]);
 
   const porConta = useMemo(()=>{
     const m={};
@@ -554,6 +595,10 @@ export function useExpenses() {
     deleteTarefa,
     usuarios,
     fetchUsuarios,
+    orcamentos,
+    fetchOrcamentos,
+    salvarOrcamento,
+    orcadoRealizado,
     token,
     setToken,
     logout,

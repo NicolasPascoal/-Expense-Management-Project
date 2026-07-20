@@ -29,7 +29,8 @@ def create_app():
     from app.routes.usuarios_routes import usuarios_bp
     from app.routes.requisicao_routes import requisicao_bp
     from app.routes.tarefas_routes import tarefas_bp
-    
+    from app.routes.orcamentos_routes import orcamentos_bp
+
     app.register_blueprint(lancamentos_bp, url_prefix='/api')
     app.register_blueprint(projeto_bp, url_prefix='/api')
     app.register_blueprint(servicos_bp, url_prefix='/api')
@@ -37,5 +38,6 @@ def create_app():
     app.register_blueprint(usuarios_bp, url_prefix='/api')
     app.register_blueprint(requisicao_bp, url_prefix='/api')
     app.register_blueprint(tarefas_bp, url_prefix='/api')
+    app.register_blueprint(orcamentos_bp, url_prefix='/api')
     
     return app

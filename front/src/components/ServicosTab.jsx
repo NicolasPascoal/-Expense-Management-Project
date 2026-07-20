@@ -1,9 +1,24 @@
 import { useState } from "react";
 import { btnStyle } from "../utils/styles";
 
-export function ServicosTab({ categoriasDb, contasDb, addCategoria, removeCategoria, addConta, removeConta, askConfirm }) {
+export function ServicosTab({ categoriasDb, contasDb, addCategoria, removeCategoria, addConta, removeConta, askConfirm, orcamentos, salvarOrcamento }) {
   const [newCat, setNewCat] = useState("");
   const [newConta, setNewConta] = useState("");
+  const [orcadoEdit, setOrcadoEdit] = useState({});
+
+  const orcadoDe = (categoriaId) => {
+    if (categoriaId in orcadoEdit) return orcadoEdit[categoriaId];
+    const existente = orcamentos?.find(o => o.categoria_id === categoriaId);
+    return existente ? existente.valor_orcado : "";
+  };
+
+  const handleOrcadoBlur = (categoriaId) => {
+    const valor = orcadoEdit[categoriaId];
+    if (valor === undefined || valor === "") return;
+    const num = parseFloat(valor);
+    if (isNaN(num) || num < 0) return;
+    salvarOrcamento(categoriaId, num);
+  };
 
   const handleAddCat = async () => {
     if (!newCat.trim()) return;
@@ -84,20 +99,32 @@ export function ServicosTab({ categoriasDb, contasDb, addCategoria, removeCatego
           {categoriasDb.map(cat => (
             <div key={cat.id} style={itemStyle}>
               <span style={{ fontWeight: 500, color: "#334155" }}>{cat.nome}</span>
-              <button
-                onClick={() => {
-                  askConfirm({
-                    title: `Excluir categoria "${cat.nome}"?`,
-                    message: "Lançamentos já existentes com esta categoria não serão alterados.",
-                    icon: "📂",
-                    confirmText: "Excluir",
-                    onConfirm: () => removeCategoria(cat.id)
-                  });
-                }}
-                style={{ ...btnStyle("#ef4444"), padding: "4px 8px", fontSize: 12 }}
-              >
-                Excluir
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Orçado (R$)"
+                  value={orcadoDe(cat.id)}
+                  onChange={e => setOrcadoEdit(s => ({ ...s, [cat.id]: e.target.value }))}
+                  onBlur={() => handleOrcadoBlur(cat.id)}
+                  style={{ width: 120, padding: "5px 8px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 12 }}
+                />
+                <button
+                  onClick={() => {
+                    askConfirm({
+                      title: `Excluir categoria "${cat.nome}"?`,
+                      message: "Lançamentos já existentes com esta categoria não serão alterados.",
+                      icon: "📂",
+                      confirmText: "Excluir",
+                      onConfirm: () => removeCategoria(cat.id)
+                    });
+                  }}
+                  style={{ ...btnStyle("#ef4444"), padding: "4px 8px", fontSize: 12 }}
+                >
+                  Excluir
+                </button>
+              </div>
             </div>
           ))}
           {categoriasDb.length === 0 && (

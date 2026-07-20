@@ -190,5 +190,24 @@ export const api = {
     return callApi(`${API_URL}/tarefas/${id}`, {
       method: 'DELETE'
     });
+  },
+
+  // Orçamentos
+  async getOrcamentos(projetoId) {
+    const url = projetoId ? `${API_URL}/orcamentos?projeto_id=${projetoId}` : `${API_URL}/orcamentos`;
+    return callApi(url);
+  },
+
+  async upsertOrcamento(projetoId, categoriaId, valorOrcado) {
+    return callApi(`${API_URL}/orcamentos`, {
+      method: 'POST',
+      body: JSON.stringify({ projeto_id: projetoId, categoria_id: categoriaId, valor_orcado: valorOrcado })
+    });
+  },
+
+  async deleteOrcamento(id) {
+    return callApi(`${API_URL}/orcamentos/${id}`, {
+      method: 'DELETE'
+    });
   }
 };

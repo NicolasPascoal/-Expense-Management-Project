@@ -47,7 +47,7 @@ export function Login({ onLogin }) {
             <Construction size={48} />
           </div>
         </div>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e293b" }}>Gestão de Despesas</h1>
+        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e293b" }}>Gabaro</h1>
         <p style={{ color: "#64748b", marginTop: 8, marginBottom: 32 }}>Faça login para acessar o painel</p>
 
         <form onSubmit={handleSubmit} style={{ textAlign: "left" }}>

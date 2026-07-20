@@ -30,9 +30,11 @@ _MODULOS_COM_GET_DB_CONNECTION = [
     "app.controller.lancamentos_controller",
     "app.controller.servicos_controller",
     "app.controller.tarefas_controller",
+    "app.controller.orcamentos_controller",
     "app.utils.tenant",
     "app.routes.projeto_routes",
     "app.routes.requisicao_routes",
+    "app.routes.orcamentos_routes",
 ]
 
 

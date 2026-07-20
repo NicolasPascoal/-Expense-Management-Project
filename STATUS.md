@@ -72,7 +72,7 @@ Ao terminar (ou pausar) uma tarefa:
 ### Épico 7 — Controle Financeiro de Obra
 | Tarefa | Status | Data | Commit/PR | Observações |
 |---|---|---|---|---|
-| 7.1 — Orçado vs. Realizado | [ ] | | | Depende de 1.1, 3.2 — maior potencial de venda do roadmap |
+| 7.1 — Orçado vs. Realizado | [x] | 2026-07-18 | | Implementado **sem** esperar a Tarefa 3.2 (JSONB) — decisão registrada no plano aprovado: o "realizado" já era calculado 100% em JS a partir de `dados` (`useExpenses.js`/`porCategoria`), então a feature nova só precisou do lado "orçado". Nova tabela `orcamentos` (`projeto_id`, `categoria_id`, `valor_orcado`, `UNIQUE(projeto_id, categoria_id)`), CRUD em `orcamentos_controller.py`/`orcamentos_routes.py` com o mesmo padrão de isolamento por tenant da Tarefa 1.2 (leitura filtra por `empresa_id` via join, escrita valida posse de `projeto_id` e que `categoria_id` pertence a esse projeto). Campo "orçado" editável em `ServicosTab.jsx`; nova aba "Orçamento" (`OrcamentoTab.jsx`) com barras + alerta visual no estilo Prumo (`--ok`/`--blue`/`--bad` conforme percentual: <90%/90–100%/>100%), oculta para `prestador`. 7 testes novos em `back/tests/test_orcamentos.py`, suíte completa 26/26 passando. Verificado ponta a ponta no navegador contra o banco de dev (categoria "Alvenaria", orçado R$50k × realizado R$127k → 254%, flag de estouro exibida corretamente). **Não coberto**: se o volume de lançamentos crescer muito, a agregação client-side pode precisar migrar para SQL (gatilho natural pra fazer a Tarefa 3.2 depois, não antes) |
 | 7.2 — Fluxo de caixa | [ ] | | | Depende de 1.1 |
 | 7.3 — Anexos de recibos/notas | [!] | | | Bloqueado: storage de anexos pendente — ver docs/adr/004-storage-anexos.md |
 | 7.4 — Parcelamento de pagamentos | [ ] | | | Depende de 7.1 |
@@ -111,3 +111,4 @@ Ver `docs/Decisions.md` para o log completo. Resumo do que está travando tarefa
 | — | Arquivo criado, roadmap ainda não iniciado — todas as tarefas em `[ ]` ou `[!]` conforme dependência de decisão de negócio |
 | 2026-07-14 | Tarefa 1.1 (entidade Empresa/Tenant) concluída — schema, vínculo de `usuarios`/`projetos`, JWT com `empresa_id`, migração executada no banco de dev e suíte de testes inicial passando. Ver observações da tarefa |
 | 2026-07-17 | Tarefa 1.2 (isolamento por tenant) concluída — todas as leituras/escritas de lançamentos, categorias, contas, projetos, tarefas, requisições e usuários agora filtram/validam por `empresa_id`. Ver observações da tarefa |
+| 2026-07-18 | Tarefa 7.1 (Orçado vs. Realizado) concluída — feita direto no schema atual, sem esperar a Tarefa 3.2. Ver observações da tarefa |

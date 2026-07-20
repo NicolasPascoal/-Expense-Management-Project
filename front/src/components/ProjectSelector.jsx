@@ -1,5 +1,5 @@
 import { btnStyle, inputStyle } from "../utils/styles";
-import { FolderOpen, Plus, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, AlertTriangle } from "lucide-react";
 
 export function ProjectSelector({ 
   projetos, 
@@ -13,13 +13,10 @@ export function ProjectSelector({
   return (
     <div style={{
       display: "flex", 
-      alignItems: "center", 
-      gap: 12, 
-      flexWrap: "wrap"
+      flexDirection: "column",
+      gap: 8, 
+      width: "100%"
     }}>
-      <span style={{ fontSize: 13, fontWeight: 600, color: "#cbd5e1", display: "flex", alignItems: "center", gap: 6 }}>
-        <FolderOpen size={16} /> Projeto:
-      </span>
       <select 
         value={projetoAtivo?.id || ""} 
         onChange={(e) => {
@@ -28,25 +25,37 @@ export function ProjectSelector({
         }}
         style={{ 
           ...inputStyle, 
-          width: "auto", 
+          width: "100%", 
           margin: 0, 
-          minWidth: 200,
-          borderColor: "#2563eb",
-          fontWeight: 600,
-          color: "#1e3a5f"
+          fontWeight: 500,
+          color: "var(--ink)",
+          borderColor: "var(--line)",
+          fontFamily: "'Inter', sans-serif"
         }}
       >
         {projetos.map(p => (
           <option key={p.id} value={p.id}>{p.nome}</option>
         ))}
       </select>
+      
       {user?.is_admin && (
-        <>
+        <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
           <button 
             onClick={() => setShowProjectModal(true)} 
-            style={{ ...btnStyle("#2563eb"), display: "flex", alignItems: "center", gap: 6 }}
+            style={{ 
+              background: "transparent",
+              color: "var(--mut)",
+              border: "none",
+              padding: "2px 0",
+              cursor: "pointer",
+              fontSize: "11px",
+              fontFamily: "'IBM Plex Mono', monospace",
+              display: "flex",
+              alignItems: "center",
+              gap: 4
+            }}
           >
-            <Plus size={16} /> Novo Projeto
+            <Plus size={12} /> novo projeto
           </button>
           {projetoAtivo && (
             <button 
@@ -54,17 +63,29 @@ export function ProjectSelector({
                 askConfirm({
                   title: `Excluir projeto "${projetoAtivo.nome}"?`,
                   message: "TODOS os lançamentos, categorias e contas deste projeto serão excluídos permanentemente.",
-                  icon: <AlertTriangle size={40} color="#f59e0b" />,
+                  icon: <AlertTriangle size={36} color="var(--bad)" />,
                   confirmText: "Excluir Tudo",
                   onConfirm: () => deleteProject(projetoAtivo.id)
                 });
               }} 
-              style={{ ...btnStyle("#dc2626"), display: "flex", alignItems: "center", gap: 6 }}
+              style={{ 
+                background: "transparent",
+                color: "var(--bad)",
+                border: "none",
+                padding: "2px 0",
+                cursor: "pointer",
+                fontSize: "11px",
+                fontFamily: "'IBM Plex Mono', monospace",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                marginLeft: "auto"
+              }}
             >
-              <Trash2 size={16} /> Excluir Projeto
+              <Trash2 size={12} /> excluir
             </button>
           )}
-        </>
+        </div>
       )}
     </div>
   );
