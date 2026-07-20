@@ -5,6 +5,7 @@ from app.controller.lancamentos_controller import (
 )
 from app.utils.auth_middleware import token_required, non_prestador_required
 from app.utils.tenant import projeto_pertence_a_empresa
+from app.utils.auditoria import log_auditoria
 
 lancamentos_bp = Blueprint('lancamentos', __name__)
 
@@ -38,7 +39,9 @@ def novo_lancamento():
     # Removemos o projeto_id do corpo para salvar apenas os dados dinâmicos no JSON
     payload = {k: v for k, v in dados.items() if k != 'projeto_id'}
 
-    return jsonify(criar_lancamento(projeto_id, payload, g.user['empresa_id'])), 201
+    novo = criar_lancamento(projeto_id, payload, g.user['empresa_id'])
+    log_auditoria(g.user['empresa_id'], g.user['id'], 'lancamento', novo['id'], 'criar', payload.get('item') or payload.get('categoria') or '')
+    return jsonify(novo), 201
 
 @lancamentos_bp.route('/lancamentos/<int:id>', methods=['PUT'])
 @token_required
@@ -48,10 +51,16 @@ def editar_lancamento(id):
     # No PUT, geralmente mantemos o projeto_id original, mas limpamos o payload
     payload = {k: v for k, v in dados.items() if k not in ['id', 'projeto_id']}
     res = atualizar_lancamento(id, payload, g.user['empresa_id'])
-    return jsonify(res) if res else (jsonify({'erro': 'Não encontrado'}), 404)
+    if not res:
+        return jsonify({'erro': 'Não encontrado'}), 404
+    log_auditoria(g.user['empresa_id'], g.user['id'], 'lancamento', id, 'editar', payload.get('item') or payload.get('categoria') or '')
+    return jsonify(res)
 
 @lancamentos_bp.route('/lancamentos/<int:id>', methods=['DELETE'])
 @token_required
 @non_prestador_required
 def remover_lancamento(id):
-    return (jsonify({'mensagem': 'Removido'}), 200) if deletar_lancamento(id, g.user['empresa_id']) else (jsonify({'erro': 'Não encontrado'}), 404)
+    if not deletar_lancamento(id, g.user['empresa_id']):
+        return jsonify({'erro': 'Não encontrado'}), 404
+    log_auditoria(g.user['empresa_id'], g.user['id'], 'lancamento', id, 'excluir', '')
+    return jsonify({'mensagem': 'Removido'}), 200

@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, g
 from app.database.db import get_db_connection
 from app.utils.auth_middleware import token_required, admin_required
+from app.utils.auditoria import log_auditoria
 
 requisicao_bp = Blueprint('requisicoes', __name__)
 
@@ -45,7 +46,8 @@ def criar_requisicao():
     req_id = cursor.lastrowid
     conn.commit()
     conn.close()
-    
+
+    log_auditoria(user['empresa_id'], user['id'], 'requisicao', req_id, 'criar', material)
     return jsonify({'id': req_id, 'status': 'Pendente'}), 201
 
 @requisicao_bp.route('/requisicoes/<int:id>/status', methods=['PUT'])
@@ -70,4 +72,5 @@ def atualizar_status(id):
 
     if not atualizado:
         return jsonify({'erro': 'Não encontrado'}), 404
+    log_auditoria(g.user['empresa_id'], g.user['id'], 'requisicao', id, 'editar', f'status -> {status}')
     return jsonify({'mensagem': 'Status atualizado'})

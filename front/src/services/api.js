@@ -209,5 +209,29 @@ export const api = {
     return callApi(`${API_URL}/orcamentos/${id}`, {
       method: 'DELETE'
     });
+  },
+
+  // Fluxo de Caixa (Entradas)
+  async getEntradas(projetoId) {
+    const url = projetoId ? `${API_URL}/entradas?projeto_id=${projetoId}` : `${API_URL}/entradas`;
+    return callApi(url);
+  },
+
+  async createEntrada(projetoId, descricao, valor, data) {
+    return callApi(`${API_URL}/entradas`, {
+      method: 'POST',
+      body: JSON.stringify({ projeto_id: projetoId, descricao, valor, data })
+    });
+  },
+
+  async deleteEntrada(id) {
+    return callApi(`${API_URL}/entradas/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  // Auditoria
+  async getAuditoria() {
+    return callApi(`${API_URL}/auditoria`);
   }
 };

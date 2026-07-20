@@ -13,6 +13,8 @@ import { AdminTab } from "./components/AdminTab";
 import { RequisicoesTab } from "./components/RequisicoesTab";
 import { TarefasTab } from "./components/TarefasTab";
 import { OrcamentoTab } from "./components/OrcamentoTab";
+import { FluxoCaixaTab } from "./components/FluxoCaixaTab";
+import { TimelineTab } from "./components/TimelineTab";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -26,7 +28,9 @@ import {
   LogOut,
   Construction,
   ListTodo,
-  Target
+  Target,
+  Banknote,
+  History
 } from "lucide-react";
 
 export default function App() {
@@ -50,6 +54,7 @@ export default function App() {
     ["dashboard", "Dashboard", LayoutDashboard],
     ["lancamentos", "Lançamentos", ClipboardList],
     ["orcamento", "Orçamento", Target],
+    ["fluxocaixa", "Fluxo de Caixa", Banknote],
     ["requisicoes", "Materiais", ClipboardCheck],
     ["tarefas", "Tarefas", ListTodo],
     ["contas", "Por Conta", Wallet],
@@ -66,6 +71,7 @@ export default function App() {
   }
 
   if (expenses.user?.is_admin) {
+    tabs.push(["timeline", "Timeline", History]);
     tabs.push(["admin", "Admin", ShieldCheck]);
   }
 
@@ -160,6 +166,8 @@ export default function App() {
           {expenses.tab === "dashboard" && <DashboardTab {...expenses} />}
           {expenses.tab === "lancamentos" && <LancamentosTab {...expenses} />}
           {expenses.tab === "orcamento" && <OrcamentoTab {...expenses} />}
+          {expenses.tab === "fluxocaixa" && <FluxoCaixaTab {...expenses} />}
+          {expenses.tab === "timeline" && <TimelineTab {...expenses} />}
           {expenses.tab === "requisicoes" && <RequisicoesTab {...expenses} />}
           {expenses.tab === "tarefas" && <TarefasTab {...expenses} />}
           {expenses.tab === "contas" && <ContasTab {...expenses} />}

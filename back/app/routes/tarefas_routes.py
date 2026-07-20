@@ -3,6 +3,7 @@ from app.controller.tarefas_controller import (
     get_tarefas, criar_tarefa, atualizar_tarefa, deletar_tarefa
 )
 from app.utils.auth_middleware import token_required
+from app.utils.auditoria import log_auditoria
 
 tarefas_bp = Blueprint('tarefas', __name__)
 
@@ -25,6 +26,8 @@ def nova_tarefa():
 
     dados = request.get_json()
     res, status_code = criar_tarefa(dados, g.user['empresa_id'])
+    if status_code == 201:
+        log_auditoria(g.user['empresa_id'], g.user['id'], 'tarefa', res.get('id'), 'criar', dados.get('titulo', ''))
     return jsonify(res), status_code
 
 @tarefas_bp.route('/tarefas/<int:id>', methods=['PUT'])
@@ -35,6 +38,8 @@ def editar_tarefa(id):
     dados = request.get_json()
 
     res, status_code = atualizar_tarefa(id, dados, usuario_id, is_admin, g.user['empresa_id'])
+    if status_code == 200:
+        log_auditoria(g.user['empresa_id'], g.user['id'], 'tarefa', id, 'editar', ', '.join(f'{k}={v}' for k, v in dados.items()))
     return jsonify(res), status_code
 
 @tarefas_bp.route('/tarefas/<int:id>', methods=['DELETE'])
@@ -42,4 +47,6 @@ def editar_tarefa(id):
 def remover_tarefa(id):
     is_admin = g.user.get('is_admin')
     res, status_code = deletar_tarefa(id, is_admin, g.user['empresa_id'])
+    if status_code == 200:
+        log_auditoria(g.user['empresa_id'], g.user['id'], 'tarefa', id, 'excluir', '')
     return jsonify(res), status_code

@@ -27,6 +27,8 @@ export function useExpenses() {
   const [tarefas, setTarefas] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [orcamentos, setOrcamentos] = useState([]);
+  const [entradas, setEntradas] = useState([]);
+  const [auditoria, setAuditoria] = useState([]);
 
   // Inatividade (15 minutos)
   const TIMEOUT_MS = 15 * 60 * 1000;
@@ -134,6 +136,15 @@ export function useExpenses() {
     }
   };
 
+  const fetchAuditoria = async () => {
+    try {
+      const res = await api.getAuditoria();
+      setAuditoria(res);
+    } catch (e) {
+      console.error("Erro ao buscar auditoria:", e);
+    }
+  };
+
   useEffect(() => {
     const handleAuthError = () => {
       setToken(null);
@@ -147,6 +158,7 @@ export function useExpenses() {
       fetchProjetos();
       fetchTarefas();
       fetchUsuarios();
+      fetchAuditoria();
     }
   }, [token]);
 
@@ -161,6 +173,7 @@ export function useExpenses() {
     if (token && projetoAtivo) {
       fetchServicos();
       fetchOrcamentos();
+      fetchEntradas();
     }
   }, [projetoAtivo, token]);
 
@@ -195,6 +208,35 @@ export function useExpenses() {
       fetchOrcamentos();
     } catch (err) {
       alert("Erro ao salvar orçamento: " + err.message);
+    }
+  };
+
+  const fetchEntradas = async () => {
+    if (!projetoAtivo) return;
+    try {
+      const res = await api.getEntradas(projetoAtivo.id);
+      setEntradas(res);
+    } catch (err) {
+      console.error("Erro ao buscar entradas:", err);
+    }
+  };
+
+  const criarEntrada = async (descricao, valor, data) => {
+    if (!projetoAtivo) return;
+    try {
+      await api.createEntrada(projetoAtivo.id, descricao, valor, data);
+      fetchEntradas();
+    } catch (err) {
+      alert("Erro ao registrar entrada: " + err.message);
+    }
+  };
+
+  const removerEntrada = async (id) => {
+    try {
+      await api.deleteEntrada(id);
+      fetchEntradas();
+    } catch (err) {
+      alert("Erro ao remover entrada: " + err.message);
     }
   };
 
@@ -334,6 +376,9 @@ export function useExpenses() {
   },[dados]);
 
   const totalGeral = dados.reduce((a,d)=>a+parseVal(d.valor),0);
+
+  const totalEntradas = entradas.reduce((a,e)=>a+parseVal(e.valor),0);
+  const saldoCaixa = totalEntradas - totalGeral;
 
   const handleForm = e => {
     const {name,value} = e.target;
@@ -498,13 +543,16 @@ export function useExpenses() {
             );
             
             const indexToUse = csvIndex !== -1 ? csvIndex : j;
-            let val = vals[indexToUse] || "";
+            const rawVal = vals[indexToUse] || "";
+            let val = rawVal;
             if (col.name === 'valor' || col.name === 'unitario') {
-              val = parseVal(val);
+              val = parseVal(rawVal);
             }
             payload[col.name] = val;
-            
-            if (String(val).trim().length > 0) {
+
+            // hasData usa o valor BRUTO da célula — parseVal("") vira 0, e "0" não é vazio,
+            // então checar o valor já convertido fazia linha em branco (valor/unitário vazios) contar como preenchida.
+            if (String(rawVal).trim().length > 0) {
               hasData = true;
 
               // Auto-criar categorias novas encontradas no CSV
@@ -599,6 +647,14 @@ export function useExpenses() {
     fetchOrcamentos,
     salvarOrcamento,
     orcadoRealizado,
+    entradas,
+    fetchEntradas,
+    criarEntrada,
+    removerEntrada,
+    totalEntradas,
+    saldoCaixa,
+    auditoria,
+    fetchAuditoria,
     token,
     setToken,
     logout,
