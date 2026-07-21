@@ -418,6 +418,59 @@ Depois disso, o roadmap segue a lógica: **(1) conseguir cobrar** → **(2) ter 
   - [ ] Um prestador recebe uma notificação quando seu pedido de material muda de status
   - [ ] Um prestador recebe uma notificação quando uma nova tarefa é atribuída a ele
 
+## Épico 10 — Funcionalidades Solicitadas (prioridade não decidida)
+
+> Itens pedidos diretamente (fora do processo de priorização por impacto comercial que gerou o resto deste documento). Registrados aqui para não se perder, mas **sem prioridade P0-P3 atribuída** — cabe ao produto decidir quando/se entram na fila, na frente ou atrás do que já está priorizado acima.
+
+### Tarefa 10.1 — Contas a Pagar (módulo dedicado)
+- **Prioridade:** a definir
+- **Dependências:** Épico 1
+- **Impacto no negócio:** Cobre vencimento/pagamento/fornecedor/parcelamento/comprovante de forma estruturada, com calendário financeiro e alertas — hoje só existe fluxo de caixa simples (Tarefa 7.2).
+- **Impacto técnico:** Nova entidade `conta_pagar` (fornecedor, valor, vencimento, status, parcelas, comprovante). Reaproveita storage de anexos (Tarefa 7.3, ainda bloqueada) para o comprovante.
+- **Dificuldade:** Média
+- **Riscos:** Sobreposição conceitual com Fluxo de Caixa (7.2) e Parcelamento (7.4) — definir fronteira exata entre os três antes de iniciar, para não duplicar modelo de dado.
+- **Critérios de aceite:**
+  - [ ] É possível cadastrar uma conta a pagar com fornecedor, valor e vencimento
+  - [ ] Alerta visual para contas vencendo/vencidas
+
+### Tarefa 10.2 — Controle de Materiais Compartilhados (equipamentos entre obras)
+- **Prioridade:** a definir
+- **Dependências:** Épico 1
+- **Impacto no negócio:** Rastreia equipamentos (serra, betoneira, escada, furadeira) por quantidade total/disponível/em uso, obra atual, responsável e histórico de transferência entre obras.
+- **Impacto técnico:** Nova entidade `equipamento` + `movimentacao_equipamento`.
+- **Dificuldade:** Alta
+- **Riscos:** ⚠️ Este item se aproxima de um módulo de inventário/ativos genérico — o `CLAUDE.md` deste repo tem regra explícita contra "construir um segundo produto dentro do produto". **Confirmar com produto que isso é realmente escopo do Gabaro antes de iniciar implementação.**
+- **Critérios de aceite:**
+  - [ ] Um equipamento pode ser transferido de uma obra para outra, com histórico registrado
+
+### Tarefa 10.3 — Calendário Unificado
+- **Prioridade:** a definir
+- **Dependências:** Tarefa 10.1 (para ter vencimentos a mostrar)
+- **Impacto no negócio:** Visão única de tarefas, entregas, compras, contas a pagar e reuniões, em modo diário/semanal/mensal.
+- **Impacto técnico:** Agregação de eventos de múltiplas entidades já existentes (tarefas, requisições) + novas (contas a pagar).
+- **Dificuldade:** Média
+- **Riscos:** Fácil de subestimar — agregar fontes de dado heterogêneas num único calendário tende a crescer em escopo.
+- **Critérios de aceite:**
+  - [ ] Calendário mostra tarefas e contas a pagar num único lugar, filtrável por tipo
+
+### Tarefa 10.4 — Dashboard Inteligente (consolidação)
+- **Prioridade:** a definir
+- **Dependências:** Tarefas 7.1, 7.2, 10.1 e Épico 8 (quanto mais dessas prontas, mais completo o painel)
+- **Impacto no negócio:** Um único painel com total gasto, previsto, fluxo de caixa, orçado × realizado, obras em atraso, pedidos pendentes, contas vencendo, equipamentos em uso e saúde financeira — reduz a necessidade de navegar entre abas.
+- **Impacto técnico:** Não é uma feature nova de dado, é composição do que as tarefas acima já expõem — só faz sentido depois que a maioria delas existir, senão vira painel com buracos.
+- **Dificuldade:** Média
+- **Riscos:** Se iniciada cedo demais (antes das dependências), rende um dashboard incompleto que precisa ser refeito depois.
+
+### Tarefa 10.5 — Comentários em Tarefas e Pedidos
+- **Prioridade:** a definir
+- **Dependências:** Épico 1
+- **Impacto no negócio:** Permite discussão contextual em uma tarefa/pedido sem depender de WhatsApp externo — reduz perda de contexto.
+- **Impacto técnico:** Nova entidade `comentario` (entidade, entidade_id, usuario_id, texto, criado_em) — reaproveita o mesmo padrão de isolamento por tenant já usado em Auditoria (Tarefa 6.3).
+- **Dificuldade:** Baixa
+- **Riscos:** Baixo — é o item de menor escopo desta lista, candidato natural a entrar antes dos outros 4 se o produto decidir priorizar algo desta leva.
+- **Critérios de aceite:**
+  - [ ] É possível comentar em uma tarefa ou pedido de material e ver o histórico de comentários
+
 ---
 
 # FASE 3 — Prontidão Enterprise (o que destrava contratos maiores)
@@ -486,7 +539,8 @@ FASE 1 (MVP Comercial — primeiro cliente pagante)
 FASE 2 (Diferenciação — o motivo de escolher este produto)
 ├─ Épico 6 — RBAC Granular                 (P1, ~14-19 dias)
 ├─ Épico 7 — Controle Financeiro de Obra   (P0/P1/P2, ~23-33 dias)
-└─ Épico 8 — Usabilidade em Campo          (P1/P2, ~10-13 dias)
+├─ Épico 8 — Usabilidade em Campo          (P1/P2, ~10-13 dias)
+└─ Épico 10 — Funcionalidades Solicitadas  (prioridade não decidida — ver seção própria)
 
 FASE 3 (Enterprise — contratos maiores)
 ├─ Tarefa 9.1 — White-label                (P2)

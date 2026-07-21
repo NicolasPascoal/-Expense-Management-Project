@@ -10,28 +10,37 @@ if not SECRET_KEY:
         "Gere uma chave segura e adicione ao seu arquivo .env antes de iniciar o servidor."
     )
 
+def _autenticar():
+    """
+    Ponto único de autenticação (Tarefa 1.3): decodifica o token do header e
+    popula g.user com o payload completo (id, username, is_admin, role, empresa_id).
+    Retorna uma resposta de erro pronta, ou None se autenticado com sucesso.
+    Todo decorator de autorização parte daqui — nunca decodificar token em outro lugar.
+    """
+    token = request.headers.get('Authorization')
+
+    if not token:
+        return jsonify({'erro': 'Token de autorização ausente!'}), 401
+
+    try:
+        # Remove o prefixo 'Bearer ' se existir
+        if token.startswith('Bearer '):
+            token = token.split(" ", 1)[1]
+        g.user = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        return jsonify({'erro': 'Token expirado!'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'erro': 'Token inválido!'}), 401
+
+    return None
+
 def token_required(f):
+    """Exige usuário autenticado; popula g.user com o payload completo do token."""
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        
-        if not token:
-            return jsonify({'erro': 'Token de autorização ausente!'}), 401
-            
-        try:
-            # Remove o prefixo 'Bearer ' se existir
-            if token.startswith('Bearer '):
-                token = token.split(" ")[1]
-                
-            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            g.user = data
-        except jwt.ExpiredSignatureError:
-            return jsonify({'erro': 'Token expirado!'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'erro': 'Token inválido!'}), 401
-        except Exception as e:
-            return jsonify({'erro': str(e)}), 401
-            
+        erro = _autenticar()
+        if erro:
+            return erro
         return f(*args, **kwargs)
     return decorated
 
@@ -45,21 +54,13 @@ def non_prestador_required(f):
     return decorated
 
 def admin_required(f):
+    """Exige usuário autenticado E admin; popula g.user com o payload completo do token."""
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token:
-            return jsonify({'erro': 'Token ausente!'}), 401
-
-        try:
-            if token.startswith('Bearer '):
-                token = token.split(" ")[1]
-            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            if not data.get('is_admin'):
-                return jsonify({'erro': 'Acesso negado. Apenas administradores!'}), 403
-            g.user = data
-        except:
-            return jsonify({'erro': 'Token inválido!'}), 401
-
+        erro = _autenticar()
+        if erro:
+            return erro
+        if not g.user.get('is_admin'):
+            return jsonify({'erro': 'Acesso negado. Apenas administradores!'}), 403
         return f(*args, **kwargs)
     return decorated

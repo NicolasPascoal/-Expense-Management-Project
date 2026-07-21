@@ -11,54 +11,33 @@ Não há uma biblioteca de autorização declarativa (como Flask-Principal, Casb
 
 **Motivo provável dessa escolha**: dado o número pequeno de papéis (2) e de regras de propriedade (praticamente só tarefas), escrever a autorização "à mão" é mais simples do que introduzir uma biblioteca de políticas — o custo dessa simplicidade aparece quando o número de regras cresce (ver seção 5).
 
-## 2. Os dois decorators em detalhe
+## 2. Os decorators em detalhe (unificados na Tarefa 1.3, 2026-07-20)
+
+Desde a Tarefa 1.3 do roadmap SaaS, existe um **ponto único de autenticação**: a função interna `_autenticar()` em `utils/auth_middleware.py`, que decodifica o token uma única vez e popula `g.user` com o payload completo (`id`, `username`, `is_admin`, `role`, `empresa_id`). Todos os decorators são composições sobre ela — nenhum decodifica token por conta própria.
 
 ### 2.1 `@token_required`
 
-```python
-def token_required(f):
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token: return 401
-        # remove "Bearer " se presente
-        data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        g.user = data   # <- disponibiliza o payload do token para a view
-        return f(*args, **kwargs)
-    return decorated
-```
-
 - Exige apenas um JWT válido (assinatura correta, não expirado).
-- **Popula `g.user`** com o payload completo do token (`id`, `username`, `is_admin`, `role`), disponível para a função de rota decorada.
-- Trata três cenários de erro distintos: token ausente (`401`), expirado (`401`, mensagem específica "Token expirado!"), e inválido/malformado (`401`, mensagem específica "Token inválido!").
+- **Popula `g.user`** com o payload completo do token.
+- Cenários de erro: token ausente (`401`), expirado (`401`, "Token expirado!"), inválido/malformado (`401`, "Token inválido!"). Header `Bearer ` sem token também retorna `401` (antes estourava `IndexError`/500).
 
 ### 2.2 `@admin_required`
 
-```python
-def admin_required(f):
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token: return 401
-        try:
-            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            if not data.get('is_admin'):
-                return 403
-        except:
-            return 401
-        return f(*args, **kwargs)
-    return decorated
-```
+- Exige JWT válido **e** `is_admin` truthy no payload (`403` caso contrário).
+- **Popula `g.user`** igual a `token_required` — mesmo contrato (unificado; a divergência histórica descrita no Problema 1 abaixo foi eliminada).
 
-- Exige JWT válido **e** que `is_admin` seja truthy no payload.
-- **Não popula `g.user`** — diferença de contrato importante em relação a `token_required` (ver seção 3, Problema #1).
-- Usa um `except:` genérico (sem especificar o tipo de exceção), que captura **qualquer** erro — inclusive bugs de programação não relacionados a JWT — e responde sempre como se fosse um token inválido.
+### 2.3 `@non_prestador_required`
+
+- Aplicado **depois** de `@token_required`; retorna `403` para `role='prestador'`.
+- Protege os módulos de dado financeiro (lançamentos, categorias, contas, orçamentos, entradas, auditoria).
 
 ## 3. Problemas de consistência identificados (apenas documentados)
 
-### Problema 1 — `admin_required` não popula `g.user`
-Rotas protegidas só por `admin_required` (ex.: `projeto_routes.py`, `requisicao_routes.atualizar_status`) não têm acesso a `g.user` dentro da view, porque o decorator decodifica o token apenas para checar `is_admin`, sem armazenar o payload em `g`. Hoje isso não causa erro porque nenhuma dessas rotas atualmente precisa saber "quem" é o admin que fez a chamada — mas é uma armadilha para qualquer desenvolvimento futuro: se alguém adicionar, por exemplo, um campo de auditoria "aprovado por" em `atualizar_status`, tentar usar `g.user['id']` ali vai gerar um `AttributeError` em tempo de execução, não detectável estaticamente.
+### Problema 1 — `admin_required` não popula `g.user` — ✅ corrigido (Tarefas 1.1/1.3)
+Histórico: rotas protegidas só por `admin_required` não tinham acesso a `g.user`. Desde a Tarefa 1.1 o decorator popula `g.user`, e desde a Tarefa 1.3 (2026-07-20) ambos os decorators compartilham o mesmo `_autenticar()` — o contrato é idêntico por construção, com teste de regressão em `back/tests/test_autorizacao.py` (`test_admin_required_popula_g_user_com_empresa_id`).
 
-### Problema 2 — `except: pass` genérico mascara bugs
-O bloco `except:` sem tipo específico em `admin_required` significa que, se o código de validação tiver um bug (ex.: uma variável não definida, um erro de tipo), o usuário recebe a mesma mensagem de "token inválido" que receberia por um JWT realmente malformado — dificultando diagnosticar a causa raiz em produção.
+### Problema 2 — `except: pass` genérico mascara bugs — ✅ corrigido (Tarefa 1.3)
+O `except:` genérico foi eliminado na unificação: só `jwt.ExpiredSignatureError` e `jwt.InvalidTokenError` são capturados (com mensagens distintas); qualquer outro erro sobe como 500 visível em vez de se disfarçar de "token inválido". O vazamento de detalhe interno (`str(e)` na resposta 401 do antigo `token_required`) também foi removido.
 
 ### Problema 3 — Falta de autorização por role nos módulos financeiros — ✅ corrigido em 2026-07-08
 Os endpoints de **lançamentos, categorias e contas** usavam apenas `@token_required` — ou seja, aceitavam qualquer usuário autenticado, **incluindo usuários com `role='prestador'`**. Na interface (`App.jsx`), essas telas são simplesmente ocultadas para prestadores (`tabs` é filtrado conforme `user.role`), mas isso era uma barreira de **UX**, não de **segurança** — qualquer prestador que capturasse seu próprio token (via DevTools do navegador, por exemplo) e fizesse uma chamada direta com `curl`/Postman para `POST /api/lancamentos`, `DELETE /api/lancamentos/:id`, `POST /api/categorias`, etc., teria sucesso, porque o backend não validava o `role` nessas rotas.
@@ -96,26 +75,33 @@ def atualizar_tarefa(tarefa_id, dados, usuario_id, is_admin):
 
 Este é o único módulo do sistema que combina **três níveis de controle** ao mesmo tempo: (1) autenticação, (2) papel do usuário, e (3) propriedade do recurso específico sendo acessado. É o padrão mais próximo de um controle de acesso "correto" para este tipo de sistema, e serve como referência do nível de granularidade que os demais módulos financeiros **não têm**.
 
-## 5. Ausência de controle de acesso por projeto/obra
+## 5. Controle de acesso por empresa (tenant) — ✅ implementado; por obra — pendente
 
-Não existe, em nenhuma tabela do banco, uma relação entre `usuarios` e `projetos`. Isso significa que a unidade de autorização hoje é **o sistema inteiro**, não **a obra específica** — um usuário autenticado (mesmo não-admin, nos módulos sem checagem de role) pode, em tese, ler e escrever dados de **qualquer** projeto cadastrado, não apenas do projeto ao qual deveria ter acesso.
+Desde a Tarefa 1.2 (2026-07-17), a unidade de autorização é **a empresa (tenant)**: toda leitura filtra por `empresa_id` do token e toda escrita valida posse do recurso antes de agir (ver `docs/Database.md` e `back/app/utils/tenant.py`). Um usuário nunca lê/edita dado de outra empresa, mesmo via chamada direta à API.
 
-Esta lacuna já está mapeada como trabalho futuro pelo próprio autor no roadmap (`front/freatures.txt`: "controle de acesso por obra", "permissões por ação (não só tipo de usuário)"), o que indica que é uma limitação conhecida e não uma "descoberta" desta análise — mas seu impacto prático (qualquer usuário lendo/editando dados financeiros de qualquer obra) é relevante o suficiente para ser destacado com prioridade neste documento.
+O que **ainda não existe** é granularidade por **obra dentro da mesma empresa**: qualquer não-prestador da empresa acessa qualquer projeto dela. Isso é a Tarefa 6.2 do roadmap (usuário↔obra com papel por vínculo), dependente dos papéis expandidos da Tarefa 6.1.
 
-## 6. Resumo da matriz de autorização efetiva (estado atual do código)
+## 6. Matriz de autorização efetiva (estado atual do código — testada em `back/tests/test_autorizacao.py` e `test_tenant_isolation.py`)
 
-| Endpoint | Decorator | Checagem adicional no controller |
+Todas as rotas autenticadas também aplicam **isolamento por tenant** (Tarefa 1.2): leitura filtrada por `empresa_id` do token; escrita valida posse do recurso (404/400 para recurso de outra empresa).
+
+| Endpoint | Decorator | Checagem adicional |
 |---|---|---|
 | `POST /login` | Nenhum (público) | — |
-| `GET/POST/PUT/DELETE /lancamentos*` | `token_required` + `non_prestador_required` | Nenhuma checagem de propriedade de projeto |
-| `GET/POST/DELETE /categorias*`, `/contas*` | `token_required` + `non_prestador_required` | Nenhuma checagem de propriedade de projeto |
-| `GET /projetos` | `token_required` | Nenhuma |
-| `POST/PUT/DELETE /projetos*` | `admin_required` | Nenhuma |
-| `GET/POST/DELETE /usuarios*` | `admin_required` | Proteção adicional contra exclusão do `id=1` |
-| `GET /requisicoes` | `token_required` | Filtra por dono se não-admin |
-| `POST /requisicoes` | `token_required` | Nenhuma (usuário só cria para si mesmo, por design) |
-| `PUT /requisicoes/:id/status` | `admin_required` | Nenhuma |
-| `GET /tarefas` | `token_required` | Filtra por dono se não-admin |
-| `POST /tarefas` | `token_required` | Checagem manual de `is_admin` na própria rota |
-| `PUT /tarefas/:id` | `token_required` | Checagem de dono (`prestador_id == usuario_id`) se não-admin; campos permitidos variam por papel |
-| `DELETE /tarefas/:id` | `token_required` | Checagem manual de `is_admin` no controller |
+| `GET/POST/PUT/DELETE /lancamentos*` | `token_required` + `non_prestador_required` | Posse do `projeto_id` na criação |
+| `GET/POST/DELETE /categorias*`, `/contas*` | `token_required` + `non_prestador_required` | Posse do `projeto_id` na criação |
+| `GET/POST/DELETE /orcamentos*` | `token_required` + `non_prestador_required` | Posse do `projeto_id` + categoria pertence ao projeto |
+| `GET/POST/DELETE /entradas*` | `token_required` + `non_prestador_required` | Posse do `projeto_id`; valor > 0 |
+| `GET /auditoria` | `token_required` + `non_prestador_required` | Filtra por `empresa_id` (últimos 100) |
+| `GET /projetos` | `token_required` | Filtra por `empresa_id` |
+| `POST/PUT/DELETE /projetos*` | `admin_required` | Posse do projeto em PUT/DELETE |
+| `GET/POST/DELETE /usuarios*` | `admin_required` | Alvo da exclusão pertence à empresa; proteção do `id=1` |
+| `GET /requisicoes` | `token_required` | Admin: filtra por empresa; não-admin: filtra por dono |
+| `POST /requisicoes` | `token_required` | Usuário só cria para si mesmo, por design |
+| `PUT /requisicoes/:id/status` | `admin_required` | Requisição pertence à empresa |
+| `GET /tarefas` | `token_required` | Admin: filtra por empresa; não-admin: filtra por dono |
+| `POST /tarefas` | `token_required` | `is_admin` manual na rota; `prestador_id` pertence à empresa |
+| `PUT /tarefas/:id` | `token_required` | Dono (`prestador_id == usuario_id`) se não-admin; campos por papel; tarefa pertence à empresa |
+| `DELETE /tarefas/:id` | `token_required` | `is_admin` no controller; tarefa pertence à empresa |
+
+**Papéis efetivos**: `admin` (tudo na própria empresa), `prestador` (só tarefas próprias e requisições), `user` (comporta-se como não-prestador não-admin — acessa dado financeiro; sem regra própria, ver Problema 5; papéis expandidos são o Épico 6).
