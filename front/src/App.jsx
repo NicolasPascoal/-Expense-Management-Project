@@ -146,9 +146,9 @@ export default function App() {
                   onClick={() => expenses.fileRef.current.click()}
                   className="btn-secondary"
                 >
-                  Importar CSV
+                  Importar CSV/XLSX
                 </button>
-                <input ref={expenses.fileRef} type="file" accept=".csv" onChange={expenses.importCSV} style={{ display: "none" }} />
+                <input ref={expenses.fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={expenses.importFile} style={{ display: "none" }} />
               </div>
             )}
           </div>

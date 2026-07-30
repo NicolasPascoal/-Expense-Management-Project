@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import * as XLSX from "xlsx";
 import { api } from "../services/api";
 import { FORMAS, DEFAULT_COLUMNS } from "../data/constants";
 import { parseVal } from "../utils/format";
@@ -466,41 +467,63 @@ export function useExpenses() {
     }
   };
 
-  const importCSV = e => {
-    const file = e.target.files[0]; if(!file) return;
-    const reader = new FileReader();
-    reader.onload = async ev => {
-      const content = ev.target.result.replace(/^\uFEFF/, '');
-      const separator = (content.split('\n')[0] || "").includes(";") ? ";" : ",";
+  const parseCSV = (content) => {
+    const semBom = content.replace(/^\uFEFF/, '');
+    const separator = (semBom.split('\n')[0] || "").includes(";") ? ";" : ",";
 
-      const lines = content.split(/\r?\n/);
-      const parsedRows = lines.map(line => {
-        const result = [];
-        let current = "";
-        let inQuotes = false;
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-          const nextChar = line[i+1];
-          if (char === '"') {
-            if (inQuotes && nextChar === '"') {
-              current += '"';
-              i++;
-            } else {
-              inQuotes = !inQuotes;
-            }
-          } else if (char === separator && !inQuotes) {
-            result.push(current.trim().replace(/^"|"$/g, ""));
-            current = "";
+    const lines = semBom.split(/\r?\n/);
+    return lines.map(line => {
+      const result = [];
+      let current = "";
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i+1];
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            current += '"';
+            i++;
           } else {
-            current += char;
+            inQuotes = !inQuotes;
           }
+        } else if (char === separator && !inQuotes) {
+          result.push(current.trim().replace(/^"|"$/g, ""));
+          current = "";
+        } else {
+          current += char;
         }
-        result.push(current.trim().replace(/^"|"$/g, ""));
-        return result;
-      }).filter(row => row.some(cell => cell.replace(/[,;]/g, "").trim().length > 0));
+      }
+      result.push(current.trim().replace(/^"|"$/g, ""));
+      return result;
+    }).filter(row => row.some(cell => cell.replace(/[,;]/g, "").trim().length > 0));
+  };
 
+  const parseXLSX = (arrayBuffer) => {
+    const workbook = XLSX.read(arrayBuffer, { type: "array", cellDates: true });
+    const primeiraAba = workbook.Sheets[workbook.SheetNames[0]];
+    // raw:true pega o valor NUM\u00C9RICO bruto da c\u00E9lula, sem passar pela formata\u00E7\u00E3o de exibi\u00E7\u00E3o do
+    // SheetJS \u2014 que usa v\u00EDrgula como separador de milhar (padr\u00E3o internacional) e conflita com o
+    // parseVal do app, que assume formato BR (v\u00EDrgula = decimal). Com raw:false, um valor como
+    // 2375 virava a string "2,375", que o parseVal lia como 2.375 (dividido por mil).
+    // defval:"" garante c\u00E9lula vazia = "" (n\u00E3o undefined) \u2014 undefined quebraria o hasData abaixo.
+    const linhas = XLSX.utils.sheet_to_json(primeiraAba, { header: 1, raw: true, defval: "" });
+    return linhas
+      .map(row => row.map(cell => {
+        if (cell instanceof Date) {
+          const dia = String(cell.getDate()).padStart(2, "0");
+          const mes = String(cell.getMonth() + 1).padStart(2, "0");
+          return `${dia}/${mes}/${cell.getFullYear()}`;
+        }
+        // Number vira string via String() puro \u2014 sem separador de milhar (ex: 2375, n\u00E3o "2,375") \u2014
+        // formato que o parseVal (ramo sem v\u00EDrgula) interpreta corretamente via parseFloat direto.
+        return String(cell ?? "").trim();
+      }))
+      .filter(row => row.some(cell => cell.length > 0));
+  };
+
+  const processarLinhasImportadas = async (parsedRows, file) => {
       if (parsedRows.length === 0) return;
-      
+
       const headers = parsedRows[0].map(h => h.toLowerCase());
       
       let targetProjeto = projetoAtivo;
@@ -596,8 +619,28 @@ export function useExpenses() {
 
       fetchDados();
       alert(`${count} registros importados com sucesso!${newCatsCreated.size > 0 ? `\n${newCatsCreated.size} novas categorias criadas.` : ""}`);
+  };
+
+  const importFile = e => {
+    const file = e.target.files[0]; if(!file) return;
+    const ehXlsx = /\.xlsx?$/i.test(file.name);
+    const reader = new FileReader();
+
+    reader.onload = async ev => {
+      try {
+        const parsedRows = ehXlsx ? parseXLSX(ev.target.result) : parseCSV(ev.target.result);
+        await processarLinhasImportadas(parsedRows, file);
+      } catch (err) {
+        console.error("Erro ao importar arquivo:", err);
+        alert("Erro ao ler o arquivo. Confira se o formato é CSV ou XLSX válido.");
+      }
     };
-    reader.readAsText(file, "UTF-8");
+
+    if (ehXlsx) {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file, "UTF-8");
+    }
     e.target.value = "";
   };
 
@@ -666,6 +709,6 @@ export function useExpenses() {
     saveForm,
     startEdit,
     exportCSV,
-    importCSV
+    importFile
   };
 }
