@@ -25,16 +25,14 @@ def get_todas_categorias(empresa_id, projeto_id=None):
 def criar_categoria(nome, projeto_id):
     """O chamador (rota) deve validar antes que projeto_id pertence à empresa do usuário."""
     conn = get_db_connection()
-    cursor = conn.cursor()
     try:
+        cursor = conn.cursor()
         cursor.execute("INSERT INTO categorias (nome, projeto_id) VALUES (?, ?)", (nome, projeto_id))
         conn.commit()
         novo_id = cursor.lastrowid
-        conn.close()
         return {"id": novo_id, "nome": nome, "projeto_id": projeto_id}
-    except Exception as e:
+    finally:
         conn.close()
-        return {"erro": str(e)}
 
 def deletar_categoria(id, empresa_id):
     conn = get_db_connection()
@@ -73,16 +71,14 @@ def get_todas_contas(empresa_id, projeto_id=None):
 def criar_conta(nome, projeto_id):
     """O chamador (rota) deve validar antes que projeto_id pertence à empresa do usuário."""
     conn = get_db_connection()
-    cursor = conn.cursor()
     try:
+        cursor = conn.cursor()
         cursor.execute("INSERT INTO contas (nome, projeto_id) VALUES (?, ?)", (nome, projeto_id))
         conn.commit()
         novo_id = cursor.lastrowid
-        conn.close()
         return {"id": novo_id, "nome": nome, "projeto_id": projeto_id}
-    except Exception as e:
+    finally:
         conn.close()
-        return {"erro": str(e)}
 
 def deletar_conta(id, empresa_id):
     conn = get_db_connection()

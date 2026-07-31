@@ -50,38 +50,33 @@ def criar_tarefa(dados, empresa_id):
         return {'erro': 'Prestador inválido'}, 400
 
     conn = get_db_connection()
-    cursor = conn.cursor()
-
     try:
+        cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO tarefas (titulo, descricao, prestador_id, status, observacoes)
             VALUES (?, ?, ?, ?, ?)
         ''', (titulo, descricao, prestador_id, status, observacoes))
         conn.commit()
         novo_id = cursor.lastrowid
-    except Exception as e:
+    finally:
         conn.close()
-        return {'erro': f'Erro ao criar tarefa: {str(e)}'}, 500
 
-    conn.close()
     return {'mensagem': 'Tarefa criada com sucesso!', 'id': novo_id}, 201
 
 def atualizar_tarefa(tarefa_id, dados, usuario_id, is_admin, empresa_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Verificar se a tarefa existe, a quem pertence e se é da mesma empresa
-    tarefa = _tarefa_pertence_a_empresa(cursor, tarefa_id, empresa_id)
-
-    if not tarefa:
-        conn.close()
-        return {'erro': 'Tarefa não encontrada'}, 404
-
-    if not is_admin and tarefa['prestador_id'] != usuario_id:
-        conn.close()
-        return {'erro': 'Acesso negado'}, 403
-
     try:
+        cursor = conn.cursor()
+
+        # Verificar se a tarefa existe, a quem pertence e se é da mesma empresa
+        tarefa = _tarefa_pertence_a_empresa(cursor, tarefa_id, empresa_id)
+
+        if not tarefa:
+            return {'erro': 'Tarefa não encontrada'}, 404
+
+        if not is_admin and tarefa['prestador_id'] != usuario_id:
+            return {'erro': 'Acesso negado'}, 403
+
         if is_admin:
             # Admin pode atualizar tudo
             titulo = dados.get('titulo')
@@ -93,7 +88,6 @@ def atualizar_tarefa(tarefa_id, dados, usuario_id, is_admin, empresa_id):
             if prestador_id is not None:
                 cursor.execute('SELECT id FROM usuarios WHERE id = ? AND empresa_id = ?', (prestador_id, empresa_id))
                 if cursor.fetchone() is None:
-                    conn.close()
                     return {'erro': 'Prestador inválido'}, 400
 
             updates = []
@@ -116,7 +110,6 @@ def atualizar_tarefa(tarefa_id, dados, usuario_id, is_admin, empresa_id):
                 params.append(observacoes)
 
             if not updates:
-                conn.close()
                 return {'mensagem': 'Nenhum dado para atualizar'}, 200
 
             query = f"UPDATE tarefas SET {', '.join(updates)} WHERE id = ?"
@@ -139,7 +132,6 @@ def atualizar_tarefa(tarefa_id, dados, usuario_id, is_admin, empresa_id):
                 params.append(observacoes)
 
             if not updates:
-                conn.close()
                 return {'mensagem': 'Nenhum dado para atualizar'}, 200
 
             query = f"UPDATE tarefas SET {', '.join(updates)} WHERE id = ?"
@@ -147,12 +139,9 @@ def atualizar_tarefa(tarefa_id, dados, usuario_id, is_admin, empresa_id):
             cursor.execute(query, tuple(params))
 
         conn.commit()
-    except Exception as e:
+        return {'mensagem': 'Tarefa atualizada com sucesso!'}, 200
+    finally:
         conn.close()
-        return {'erro': f'Erro ao atualizar tarefa: {str(e)}'}, 500
-
-    conn.close()
-    return {'mensagem': 'Tarefa atualizada com sucesso!'}, 200
 
 def deletar_tarefa(tarefa_id, is_admin, empresa_id):
     if not is_admin:

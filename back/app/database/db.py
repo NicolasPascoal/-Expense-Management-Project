@@ -1,8 +1,11 @@
+import logging
 import psycopg2
 from psycopg2.extras import DictCursor
 from psycopg2 import pool
 from dotenv import load_dotenv
 import os
+
+logger = logging.getLogger(__name__)
 
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -84,7 +87,7 @@ class PostgreSQLCursorWrapper:
             else:
                 self._cursor.execute(sql_pg)
         except Exception as e:
-            print(f"\n[QUERY FAILED] {sql_pg} | Params: {params} | Error: {e}")
+            logger.error("Falha ao executar query", exc_info=e, extra={"sql": sql_pg, "params": params})
             raise e
 
         # 4. Capturar lastrowid para comandos INSERT usando a função lastval()

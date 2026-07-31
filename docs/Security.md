@@ -38,13 +38,15 @@ Como detalhado em `Authorization.md`, os endpoints de lançamentos, categorias e
 
 **Mitigação aplicada em 2026-07-08**: novo decorator `non_prestador_required` (`app/utils/auth_middleware.py`) aplicado a todas as rotas de lançamentos/categorias/contas — `role='prestador'` agora recebe `403` em leitura e escrita nesses três módulos. **O que continua em aberto**: (a) não há checagem de propriedade de projeto — um admin (ou o papel ambíguo `role='user'`, ver `Authorization.md` e `BusinessRules.md`) ainda pode ler/escrever dados de qualquer projeto, já que multi-tenancy (Épico 1) ainda não existe; (b) essa é uma correção pontual do gap conhecido, não a Tarefa 1.3 completa do roadmap, que prevê autorização considerando tenant.
 
-#### 2.2 Vazamento de detalhes internos em mensagens de erro
-Vários controllers capturam exceções genéricas e devolvem a mensagem crua ao cliente:
+#### 2.2 Vazamento de detalhes internos em mensagens de erro — ✅ corrigido em 2026-07-30
+Vários controllers capturavam exceções genéricas e devolviam a mensagem crua ao cliente:
 ```python
 except Exception as e:
     return {"erro": str(e)}
 ```
-Isso pode expor detalhes internos do banco de dados (nomes de tabelas/colunas, mensagens de erro do driver `psycopg2`, stack traces parciais) diretamente na resposta HTTP, informação que normalmente deveria ficar restrita a logs internos, não à resposta pública da API.
+Isso podia expor detalhes internos do banco de dados (nomes de tabelas/colunas, mensagens de erro do driver `psycopg2`, stack traces parciais) diretamente na resposta HTTP, informação que normalmente deveria ficar restrita a logs internos, não à resposta pública da API.
+
+**Correção aplicada** (Tarefa 2.3, `STATUS.md`): os 5 pontos que faziam esse `except Exception as e: return {"erro": str(e)}` foram removidos. Um handler global (`@app.errorhandler(Exception)` em `app/__init__.py`) agora captura qualquer exceção não tratada, loga o stack trace completo internamente (com `request_id`/`empresa_id`/`usuario_id`) e devolve só `{"erro": "Erro interno do servidor", "request_id": ...}` ao cliente. O único caso que continua com tratamento específico é `username` duplicado em `criar_usuario` (`psycopg2.errors.UniqueViolation`), que retorna `400` com mensagem limpa por ser erro de validação esperado, não falha interna.
 
 #### 2.3 Log de query com dados sensíveis potencialmente expostos
 `app/database/db.py`, dentro de `PostgreSQLCursorWrapper.execute()`, faz:

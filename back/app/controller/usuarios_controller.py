@@ -1,3 +1,5 @@
+import psycopg2
+
 from app.database.db import get_db_connection
 from werkzeug.security import generate_password_hash
 
@@ -11,19 +13,22 @@ def get_todos_usuarios(empresa_id):
 
 def criar_usuario(username, password, empresa_id, is_admin=0, role='prestador'):
     conn = get_db_connection()
-    cursor = conn.cursor()
     try:
+        cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO usuarios (username, password, is_admin, role, empresa_id) VALUES (?, ?, ?, ?, ?)",
             (username, generate_password_hash(password), 1 if is_admin else 0, role, empresa_id)
         )
         conn.commit()
         novo_id = cursor.lastrowid
-        conn.close()
         return {"id": novo_id, "username": username, "is_admin": bool(is_admin), "role": role, "empresa_id": empresa_id}
-    except Exception as e:
+    except psycopg2.errors.UniqueViolation:
+        # username já cadastrado (UNIQUE global, ver STATUS.md Tarefa 1.1) — erro de
+        # validação esperado, não bug interno: não deve virar 500.
+        conn.rollback()
+        return {"erro": "Nome de usuário já está em uso"}
+    finally:
         conn.close()
-        return {"erro": str(e)}
 
 def deletar_usuario(id, empresa_id):
     conn = get_db_connection()

@@ -1,4 +1,9 @@
+import logging
+
 from app.database.db import get_db_connection
+
+logger = logging.getLogger(__name__)
+
 
 def log_auditoria(empresa_id, usuario_id, entidade, entidade_id, acao, detalhes=""):
     """Grava um evento de auditoria. Falha silenciosa não deve derrubar a ação principal
@@ -13,4 +18,8 @@ def log_auditoria(empresa_id, usuario_id, entidade, entidade_id, acao, detalhes=
         conn.commit()
         conn.close()
     except Exception as e:
-        print(f"[AUDITORIA] Falha ao gravar log: {e}")
+        logger.warning(
+            "Falha ao gravar log de auditoria",
+            exc_info=e,
+            extra={"empresa_id": empresa_id, "usuario_id": usuario_id, "entidade": entidade, "acao": acao},
+        )

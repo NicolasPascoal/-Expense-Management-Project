@@ -103,8 +103,8 @@ Depois disso, o roadmap segue a lógica: **(1) conseguir cobrar** → **(2) ter 
 - **Estimativa:** 3-4 dias
 - **Riscos:** Baixo, mas exige disciplina para não reintroduzir `except Exception: return str(e)` em código novo.
 - **Critérios de aceite:**
-  - [ ] Nenhuma resposta de erro da API expõe stack trace, nome de tabela/coluna ou mensagem crua de driver de banco
-  - [ ] Todo erro 500 é logado com `request_id`, `empresa_id`, `usuario_id` e stack trace completo apenas no log interno
+  - [x] Nenhuma resposta de erro da API expõe stack trace, nome de tabela/coluna ou mensagem crua de driver de banco
+  - [x] Todo erro 500 é logado com `request_id`, `empresa_id`, `usuario_id` e stack trace completo apenas no log interno
 
 ### Tarefa 2.4 — Conformidade básica com LGPD (registro de tratamento, política de privacidade, exportação/exclusão de dados por tenant)
 - **Prioridade:** P1
