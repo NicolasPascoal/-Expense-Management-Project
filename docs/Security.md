@@ -29,6 +29,8 @@ Além disso, `docker-compose.yml` também tinha esses dois valores reais hardcod
 #### 1.3 Senha de administrador seed previsível
 `app/database/modelUsuarios.py` cria automaticamente, na primeira inicialização de um banco vazio, um usuário `admin` com senha `admin` (hash aplicado, mas a senha original é trivial). Se uma nova instância do sistema for provisionada e essa senha não for trocada imediatamente, existe uma conta administrativa com credencial obviamente adivinhável.
 
+**Risco aceito conscientemente na stack de dev/staging (Umbrel/Portainer, `docker-compose.dev.yml`, 2026-07-30)**: mantido `admin`/`admin` de propósito — ambiente só acessível via VPN, uso restrito a duas pessoas conhecidas (usuário e familiar), sem dados reais de produção. Não há endpoint de troca de senha pela própria UI hoje (`usuarios_routes.py` só tem GET/POST/DELETE); a única forma de trocar é rodando `create_admin.py` no console do container. **Revisitar antes de**: expor esse ambiente fora da VPN, colocar dados reais nele, ou promovê-lo a produção de fato.
+
 ### 🟠 Alto
 
 #### 2.1 Autorização incompleta em módulos financeiros — ⚠️ mitigação parcial em 2026-07-08
