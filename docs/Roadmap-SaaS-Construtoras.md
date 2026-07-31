@@ -91,8 +91,8 @@ Depois disso, o roadmap segue a lógica: **(1) conseguir cobrar** → **(2) ter 
 - **Estimativa:** 1-2 dias
 - **Riscos:** Baixo; atenção para não bloquear acidentalmente uso legítimo de equipes atrás do mesmo IP (NAT de obra/escritório compartilhado).
 - **Critérios de aceite:**
-  - [ ] Após N tentativas falhas em um intervalo, requisições adicionais são bloqueadas temporariamente
-  - [ ] Testado manualmente com script de tentativas repetidas
+  - [x] Após N tentativas falhas em um intervalo, requisições adicionais são bloqueadas temporariamente
+  - [x] Testado manualmente com script de tentativas repetidas
 
 ### Tarefa 2.3 — Padronizar tratamento de erro (parar de vazar detalhes internos) e logging estruturado
 - **Prioridade:** P1

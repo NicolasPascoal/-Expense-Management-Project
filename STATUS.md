@@ -31,7 +31,7 @@ Ao terminar (ou pausar) uma tarefa:
 | Tarefa | Status | Data | Commit/PR | Observações |
 |---|---|---|---|---|
 | 2.1 — Rotacionar/remover segredos do Git | [x] | 2026-07-30 | | `.env` destrackeado, fallbacks hardcoded removidos de `docker-compose.yml`, credenciais fixas removidas de `create_admin.py`. **2026-07-30**: `JWT_SECRET_KEY` e senha do Postgres (usuário `postgres`, banco local `expense_management`) rotacionados — valores antigos (vazados no histórico do Git) agora inválidos; nada estava em produção no momento, então não houve impacto em usuários ativos. **Decisão pendente, não bloqueante**: reescrever ou não o histórico do Git para remover os valores antigos por completo (ver `docs/Security.md`, item 1.1) — como os valores já foram rotacionados, isso deixou de ser urgente e é só limpeza opcional |
-| 2.2 — Rate limiting no login | [ ] | | | |
+| 2.2 — Rate limiting no login | [x] | 2026-07-30 | | Flask-Limiter adicionado (`app/extensions.py`, storage em memória — só serve para um único processo backend, ver comentário no arquivo). `POST /api/login` limitado por IP (10/min) e por conta via `username` do corpo (5/min; 20/hora) — decorators empilhados em `auth_routes.py`. Testado manualmente com scripts de tentativas repetidas: 401 dentro do limite, 429 ao estourar, tanto por conta quanto por IP. Suíte completa 47/47 continua passando |
 | 2.3 — Tratamento de erro padronizado + logging estruturado | [ ] | | | |
 | 2.4 — Conformidade LGPD básica | [ ] | | | Depende de 1.1; parte jurídica fora do escopo de engenharia |
 

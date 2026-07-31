@@ -66,8 +66,10 @@ else:
 ```
 Se a variável `CORS_ALLOWED_ORIGINS` não for definida no ambiente, a API aceita requisições de **qualquer origem**. No `.env` real do projeto essa variável está corretamente configurada (`http://localhost:5173,http://localhost:3000`), mas o comportamento padrão do código, para quem clonar o projeto sem configurar isso, é permissivo.
 
-#### 3.2 Ausência de rate limiting no endpoint de login
-`POST /api/login` não tem nenhuma proteção contra tentativas repetidas (nem por IP, nem por conta, nem CAPTCHA, nem atraso progressivo) — um ataque de força bruta de senha contra uma conta específica não encontraria nenhuma barreira automática no nível da aplicação.
+#### 3.2 Ausência de rate limiting no endpoint de login — ✅ corrigido em 2026-07-30
+`POST /api/login` não tinha nenhuma proteção contra tentativas repetidas (nem por IP, nem por conta, nem CAPTCHA, nem atraso progressivo) — um ataque de força bruta de senha contra uma conta específica não encontraria nenhuma barreira automática no nível da aplicação.
+
+**Correção aplicada**: Flask-Limiter (`back/app/extensions.py`) limita `/api/login` por IP (10/min) e por conta (5/min; 20/hora), verificado manualmente com scripts de tentativas repetidas (`STATUS.md`, Tarefa 2.2). Storage em memória — adequado para o único processo backend atual; precisa de um backend compartilhado (Redis) se o app rodar em múltiplas instâncias no futuro.
 
 #### 3.3 `except:` genérico mascarando erros de programação
 Em `utils/auth_middleware.py`, o decorator `admin_required` usa um bloco `except:` sem tipo especificado, que responde sempre "Token inválido!" mesmo quando o erro real é um bug de programação não relacionado à validação do token — isso dificulta o diagnóstico de problemas reais e pode ocultar comportamentos inesperados do sistema em produção.
