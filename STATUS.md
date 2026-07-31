@@ -30,7 +30,7 @@ Ao terminar (ou pausar) uma tarefa:
 ### Épico 2 — Segurança e Confiança
 | Tarefa | Status | Data | Commit/PR | Observações |
 |---|---|---|---|---|
-| 2.1 — Rotacionar/remover segredos do Git | [~] | 2026-07-08 | | `.env` destrackeado, fallbacks hardcoded removidos de `docker-compose.yml`, credenciais fixas removidas de `create_admin.py`. **Falta (ação manual do usuário, não executada nesta sessão)**: gerar novo `JWT_SECRET_KEY`/senha do Postgres e aplicar em produção (reinicia backend+banco, desloga usuários ativos); decidir se o histórico do Git será reescrito |
+| 2.1 — Rotacionar/remover segredos do Git | [x] | 2026-07-30 | | `.env` destrackeado, fallbacks hardcoded removidos de `docker-compose.yml`, credenciais fixas removidas de `create_admin.py`. **2026-07-30**: `JWT_SECRET_KEY` e senha do Postgres (usuário `postgres`, banco local `expense_management`) rotacionados — valores antigos (vazados no histórico do Git) agora inválidos; nada estava em produção no momento, então não houve impacto em usuários ativos. **Decisão pendente, não bloqueante**: reescrever ou não o histórico do Git para remover os valores antigos por completo (ver `docs/Security.md`, item 1.1) — como os valores já foram rotacionados, isso deixou de ser urgente e é só limpeza opcional |
 | 2.2 — Rate limiting no login | [ ] | | | |
 | 2.3 — Tratamento de erro padronizado + logging estruturado | [ ] | | | |
 | 2.4 — Conformidade LGPD básica | [ ] | | | Depende de 1.1; parte jurídica fora do escopo de engenharia |

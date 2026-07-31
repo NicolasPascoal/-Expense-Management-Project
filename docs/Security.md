@@ -6,7 +6,7 @@
 
 ### 🔴 Crítico
 
-#### 1.1 Segredos reais commitados no controle de versão — ⚠️ mitigação parcial em 2026-07-08
+#### 1.1 Segredos reais commitados no controle de versão — ✅ segredos rotacionados em 2026-07-30
 O arquivo `back/.env` estava rastreado pelo Git (confirmado via `git ls-files`), apesar de existir um `.gitignore` que lista `.env` como arquivo a ignorar. O conteúdo desse arquivo inclui:
 - A senha real do usuário do PostgreSQL (`PGPASSWORD`).
 - A chave real usada para assinar todos os tokens JWT (`JWT_SECRET_KEY`).
@@ -17,7 +17,9 @@ Além disso, `docker-compose.yml` também tinha esses dois valores reais hardcod
 
 **Detalhe técnico relevante**: como o `.gitignore` já listava `.env` corretamente, o arquivo provavelmente foi adicionado ao Git **antes** da entrada correspondente ser incluída no `.gitignore`, ou foi adicionado forçadamente (`git add -f`) em algum momento. De qualquer forma, apagar o arquivo do commit mais recente não é suficiente — o segredo permanece acessível no histórico de commits até que este seja reescrito.
 
-**Mitigação aplicada em 2026-07-08** (ver `STATUS.md`, Tarefa 2.1): `back/.env`/`front/.env` foram removidos do rastreamento (`git rm --cached`, arquivos preservados localmente) e os fallbacks hardcoded do `docker-compose.yml` foram substituídos por `${VAR:?erro}` (falha explícita se não configurado via `.env`). **Isso não invalida os valores antigos** — eles continuam no histórico de commits e há produção rodando com eles hoje. Ainda pendente, como ação manual do usuário (não executada nesta sessão por exigir reiniciar backend/banco de produção e deslogar usuários ativos): gerar e aplicar em produção um novo `JWT_SECRET_KEY` e uma nova senha do Postgres, e decidir se o histórico do Git será reescrito para remover os valores antigos por completo.
+**Mitigação aplicada em 2026-07-08** (ver `STATUS.md`, Tarefa 2.1): `back/.env`/`front/.env` foram removidos do rastreamento (`git rm --cached`, arquivos preservados localmente) e os fallbacks hardcoded do `docker-compose.yml` foram substituídos por `${VAR:?erro}` (falha explícita se não configurado via `.env`).
+
+**Rotação aplicada em 2026-07-30**: `JWT_SECRET_KEY` e a senha do usuário `postgres` foram trocados por novos valores gerados aleatoriamente (`ALTER ROLE` no Postgres local + atualização de `back/.env`). Não havia produção rodando no momento, então não houve impacto em usuários ativos. Os valores antigos, mesmo continuando visíveis no histórico do Git, **não são mais válidos** — não assinam tokens aceitos pela aplicação nem autenticam no banco. Decisão ainda em aberto, mas não mais urgente: reescrever ou não o histórico do Git para remover os valores antigos por completo (limpeza, não correção de vulnerabilidade ativa).
 
 #### 1.2 Credenciais de administrador hardcoded em script versionado — ✅ corrigido em 2026-07-08
 `back/create_admin.py` continha, em texto plano no código-fonte, um usuário/senha fixos (`nicolas`/`nicolas12`). Qualquer pessoa que lesse o repositório tinha conhecimento de um login administrativo válido, caso o script já tivesse sido executado contra o banco de produção.
