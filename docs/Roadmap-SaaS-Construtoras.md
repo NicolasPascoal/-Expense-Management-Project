@@ -238,8 +238,8 @@ Depois disso, o roadmap segue a lógica: **(1) conseguir cobrar** → **(2) ter 
 - **Estimativa:** 4-5 dias
 - **Riscos:** Superfície nova de ataque (cadastro público) — precisa de validação de e-mail, proteção contra bots (captcha), e reaproveitar o rate limiting da Tarefa 2.2.
 - **Critérios de aceite:**
-  - [ ] Uma pessoa consegue criar uma conta nova de construtora sem intervenção manual da equipe
-  - [ ] E-mail é validado antes da conta ser totalmente ativada
+  - [x] Uma pessoa consegue criar uma conta nova de construtora sem intervenção manual da equipe
+  - [ ] E-mail é validado antes da conta ser totalmente ativada — **adiado conscientemente**: depende de ADR-003 (provedor de e-mail, pendente — ver `docs/Decisions.md`), decisão do usuário. Conta é ativada na hora por enquanto; sem exposição pública real hoje (app só roda local/VPN), risco prático baixo. Revisitar quando ADR-003 for resolvida ou antes de expor publicamente
 
 ### Tarefa 5.2 — Convite de usuários por e-mail com papel pré-definido
 - **Prioridade:** P1

@@ -1,24 +1,43 @@
 import { useState } from "react";
 import { api } from "../services/api";
 import { btnStyle } from "../utils/styles";
+import { DEFAULT_COLUMNS } from "../data/constants";
 import { Construction } from "lucide-react";
 
-export function Login({ onLogin, onShowSignup }) {
+const inputStyle = {
+  width: "100%",
+  padding: "12px 16px",
+  borderRadius: 10,
+  border: "1px solid #e2e8f0",
+  fontSize: 14,
+  outline: "none"
+};
+
+const labelStyle = { display: "block", fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 6 };
+
+export function Signup({ onSignup, onShowLogin }) {
+  const [nomeEmpresa, setNomeEmpresa] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
+    if (password !== confirmarSenha) {
+      setError("As senhas não coincidem");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const data = await api.login(username, password);
-      onLogin(data);
+      const data = await api.signup(nomeEmpresa, username, password, DEFAULT_COLUMNS);
+      onSignup(data);
     } catch (err) {
-      setError(err.message || "Usuário ou senha incorretos");
+      setError(err.message || "Não foi possível criar a conta");
     } finally {
       setLoading(false);
     }
@@ -47,44 +66,54 @@ export function Login({ onLogin, onShowSignup }) {
             <Construction size={48} />
           </div>
         </div>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e293b" }}>Gabaro</h1>
-        <p style={{ color: "#64748b", marginTop: 8, marginBottom: 32 }}>Faça login para acessar o painel</p>
+        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e293b" }}>Criar conta</h1>
+        <p style={{ color: "#64748b", marginTop: 8, marginBottom: 32 }}>Comece a usar o Gabaro na sua construtora</p>
 
         <form onSubmit={handleSubmit} style={{ textAlign: "left" }}>
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 6 }}>Usuário</label>
+            <label style={labelStyle}>Nome da construtora</label>
+            <input
+              type="text"
+              value={nomeEmpresa}
+              onChange={e => setNomeEmpresa(e.target.value)}
+              placeholder="Ex: Construtora Silva"
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={labelStyle}>Usuário (admin)</label>
             <input
               type="text"
               value={username}
               onChange={e => setUsername(e.target.value)}
               placeholder="Ex: admin"
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: 10,
-                border: "1px solid #e2e8f0",
-                fontSize: 14,
-                outline: "none"
-              }}
+              style={inputStyle}
               required
             />
           </div>
 
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 6 }}>Senha</label>
+          <div style={{ marginBottom: 20 }}>
+            <label style={labelStyle}>Senha</label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: 10,
-                border: "1px solid #e2e8f0",
-                fontSize: 14,
-                outline: "none"
-              }}
+              style={inputStyle}
+              required
+            />
+          </div>
+
+          <div style={{ marginBottom: 24 }}>
+            <label style={labelStyle}>Confirmar senha</label>
+            <input
+              type="password"
+              value={confirmarSenha}
+              onChange={e => setConfirmarSenha(e.target.value)}
+              placeholder="••••••••"
+              style={inputStyle}
               required
             />
           </div>
@@ -115,18 +144,18 @@ export function Login({ onLogin, onShowSignup }) {
               opacity: loading ? 0.7 : 1
             }}
           >
-            {loading ? "Entrando..." : "Acessar Sistema"}
+            {loading ? "Criando conta..." : "Criar conta"}
           </button>
         </form>
-        
+
         <p style={{ marginTop: 24, fontSize: 13, color: "#64748b" }}>
-          Ainda não tem conta?{" "}
+          Já tem uma conta?{" "}
           <button
             type="button"
-            onClick={onShowSignup}
+            onClick={onShowLogin}
             style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 600, cursor: "pointer", fontSize: 13, padding: 0 }}
           >
-            Criar conta
+            Entrar
           </button>
         </p>
       </div>

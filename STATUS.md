@@ -56,7 +56,7 @@ Ao terminar (ou pausar) uma tarefa:
 ### Épico 5 — Onboarding e Autosserviço
 | Tarefa | Status | Data | Commit/PR | Observações |
 |---|---|---|---|---|
-| 5.1 — Cadastro público de construtora | [ ] | | | Depende de 1.1 |
+| 5.1 — Cadastro público de construtora | [x] | 2026-08-01 | | `POST /api/signup` (público, sem auth): cria empresa + primeiro usuário admin + projeto inicial ("Minha Primeira Obra") em uma única transação (`signup_controller.py`), com rollback completo se `username` já existir (nunca deixa empresa órfã sem admin). Login automático após cadastro (reaproveita `login_usuario`), mesmo formato de resposta do `/login`. Rate limiting reaproveitado da Tarefa 2.2 (5/hora por IP). Frontend: `Signup.jsx` com toggle a partir da tela de login (`App.jsx`), sem router novo. Testado ponta a ponta no navegador: conta nova fica 100% isolada (dashboard zerado, nenhum dado de outra empresa visível) — confirma que a Tarefa 1.2 segura esse caminho novo também. 3 testes novos em `test_signup.py` (criação completa, username duplicado sem deixar empresa órfã, validação de campos), suíte completa 50/50. **Riscos aceitos conscientemente por enquanto** (ver roadmap): (a) sem verificação de e-mail — depende de ADR-003 (provedor de e-mail), pendente; conta é ativada na hora. (b) sem captcha — só rate limiting protege contra bot/abuso automatizado por ora. Ambos documentados como fast-follow quando a decisão de fornecedor for tomada; sem exposição pública real hoje (app só roda local/VPN), então o risco prático atual é baixo |
 | 5.2 — Convite de usuários por e-mail | [!] | | | Bloqueado: provedor de e-mail pendente — ver docs/adr/003-provedor-email.md |
 | 5.3 — Onboarding guiado | [ ] | | | Depende de 5.1 |
 

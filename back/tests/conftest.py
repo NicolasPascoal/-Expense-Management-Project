@@ -27,6 +27,7 @@ from app.database.db import PostgreSQLConnectionWrapper, init_db
 _MODULOS_COM_GET_DB_CONNECTION = [
     "app.controller.usuarios_controller",
     "app.controller.auth_controller",
+    "app.controller.signup_controller",
     "app.controller.lancamentos_controller",
     "app.controller.servicos_controller",
     "app.controller.tarefas_controller",

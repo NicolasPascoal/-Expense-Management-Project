@@ -41,6 +41,16 @@ export const api = {
     return data;
   },
 
+  async signup(nomeEmpresa, username, password, colunas) {
+    const data = await callApi(`${API_URL}/signup`, {
+      method: 'POST',
+      body: JSON.stringify({ nome_empresa: nomeEmpresa, username, password, colunas })
+    });
+    sessionStorage.setItem('token', data.token);
+    sessionStorage.setItem('user', JSON.stringify(data.user));
+    return data;
+  },
+
   // Lançamentos
   async getLancamentos(projetoId) {
     const url = projetoId ? `${API_URL}/lancamentos?projeto_id=${projetoId}` : `${API_URL}/lancamentos`;

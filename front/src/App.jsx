@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useExpenses } from "./hooks/useExpenses";
 import { FormModal } from "./components/FormModal";
 import { Login } from "./components/Login";
+import { Signup } from "./components/Signup";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { ProjectModal } from "./components/ProjectModal";
 import { ProjectSelector } from "./components/ProjectSelector";
@@ -35,6 +36,7 @@ import {
 
 export default function App() {
   const expenses = useExpenses();
+  const [authView, setAuthView] = useState("login");
 
   // Garantir que o prestador caia na aba correta se estiver em uma aba proibida
   useEffect(() => {
@@ -44,10 +46,15 @@ export default function App() {
   }, [expenses.user?.role, expenses.user?.is_admin, expenses.tab]);
 
   if (!expenses.token) {
-    return <Login onLogin={(data) => {
+    const entrar = (data) => {
       expenses.setToken(data.token);
       expenses.setUser(data.user);
-    }} />;
+    };
+
+    if (authView === "signup") {
+      return <Signup onSignup={entrar} onShowLogin={() => setAuthView("login")} />;
+    }
+    return <Login onLogin={entrar} onShowSignup={() => setAuthView("signup")} />;
   }
 
   const allTabs = [

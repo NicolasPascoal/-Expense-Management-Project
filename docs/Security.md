@@ -84,6 +84,13 @@ Em `utils/auth_middleware.py`, o decorator `admin_required` usa um bloco `except
 #### 3.5 Sem expiração/revogação de token além do tempo fixo
 Como não há uma lista de tokens revogados (blacklist) nem verificação em tempo real contra o banco a cada requisição, um token roubado (por exemplo, via XSS, dado que fica em `sessionStorage` acessível a JavaScript) continua **totalmente válido** por até 24 horas, mesmo que o usuário faça logout manual na interface (o logout apenas limpa o armazenamento local do navegador — não invalida o token no lado do servidor).
 
+#### 3.6 Cadastro público sem verificação de e-mail nem captcha — risco aceito conscientemente em 2026-08-01
+`POST /api/signup` (Tarefa 5.1, `STATUS.md`) é uma rota pública, sem autenticação, que cria empresa + usuário admin + projeto ativados na hora. Só tem rate limiting (5/hora por IP, reaproveitado da Tarefa 2.2) como barreira contra abuso — sem verificação de e-mail nem captcha.
+
+**Por que foi aceito**: verificação de e-mail depende de ADR-003 (provedor de e-mail transacional, pendente — ver `docs/Decisions.md`), decisão de fornecedor do usuário. Captcha também depende de fornecedor externo (reCAPTCHA/hCaptcha/Turnstile), não escolhido. Hoje o app não está exposto publicamente (roda local ou na VPN do Umbrel — ver `docs/Decisions.md`/memória de infra), então o risco prático de abuso automatizado é baixo.
+
+**Revisitar antes de**: apontar um domínio público pra esse backend, ou se aparecer abuso real de cadastro (contas em massa). Nesse momento, considerar uma trava temporária (código de convite) até a ADR-003 e a escolha de captcha serem resolvidas.
+
 ## 2. Riscos relacionados a dados sensíveis de negócio
 
 - Dados financeiros reais (valores, fornecedores, contas pagadoras com nomes de pessoas físicas reais) estão presentes nos seeds e no dataset `front/src/data/data.json` — qualquer pessoa com acesso ao repositório tem acesso a esse histórico financeiro caso o repositório contenha commits desses arquivos com dados reais (o `data.json` observado tem ~60KB de dados, indicando um volume real de lançamentos históricos).

@@ -76,6 +76,7 @@ def create_app():
     from app.routes.projeto_routes import projeto_bp
     from app.routes.servicos_routes import servicos_bp
     from app.routes.auth_routes import auth_bp
+    from app.routes.signup_routes import signup_bp
     from app.routes.usuarios_routes import usuarios_bp
     from app.routes.requisicao_routes import requisicao_bp
     from app.routes.tarefas_routes import tarefas_bp
@@ -87,6 +88,7 @@ def create_app():
     app.register_blueprint(projeto_bp, url_prefix='/api')
     app.register_blueprint(servicos_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/api')
+    app.register_blueprint(signup_bp, url_prefix='/api')
     app.register_blueprint(usuarios_bp, url_prefix='/api')
     app.register_blueprint(requisicao_bp, url_prefix='/api')
     app.register_blueprint(tarefas_bp, url_prefix='/api')
