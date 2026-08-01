@@ -132,9 +132,9 @@ Depois disso, o roadmap segue a lógica: **(1) conseguir cobrar** → **(2) ter 
 - **Estimativa:** 8-12 dias
 - **Riscos:** Maior refatoração técnica do roadmap — risco de regressão em todos os módulos existentes; deve ser acompanhada de testes automatizados (Tarefa 3.3) para ser segura.
 - **Critérios de aceite:**
-  - [ ] Toda query SQL manual foi substituída por modelos ORM
-  - [ ] Toda alteração de schema, a partir desta tarefa, é feita via migration versionada e reversível
-  - [ ] A camada de compatibilidade SQLite (`db.py`) é removida
+  - [ ] Toda query SQL manual foi substituída por modelos ORM — **em andamento**: 1 de 8 controllers migrado (`signup_controller.py`), fundação (models + Alembic) pronta, resto é trabalho módulo-a-módulo em sessões futuras
+  - [x] Toda alteração de schema, a partir desta tarefa, é feita via migration versionada e reversível
+  - [ ] A camada de compatibilidade SQLite (`db.py`) é removida — só depois do critério acima estar 100% completo
 
 ### Tarefa 3.2 — Migrar campos dinâmicos de `TEXT` para `JSONB`
 - **Prioridade:** P1

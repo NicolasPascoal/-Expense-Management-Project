@@ -1,6 +1,7 @@
 import logging
 import os
 import uuid
+from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
 from flask import Flask, g, jsonify, request
@@ -8,12 +9,23 @@ from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 
 from app.database.db import init_db
-from app.extensions import limiter
+from app.extensions import db, limiter
 from app.logging_config import configure_logging
 
 load_dotenv()
 
 logger = logging.getLogger("gabaro.request")
+
+
+def _sqlalchemy_database_uri():
+    # Mesmas env vars PG* de app/database/db.py — só uma segunda forma de
+    # conectar ao mesmo Postgres (Tarefa 3.1, introdução gradual do ORM).
+    usuario = quote_plus(os.getenv("PGUSER", "postgres"))
+    senha = quote_plus(os.getenv("PGPASSWORD", "postgres"))
+    host = os.getenv("PGHOST", "localhost")
+    porta = os.getenv("PGPORT", "5432")
+    banco = os.getenv("PGDATABASE", "expense_management")
+    return f"postgresql+psycopg2://{usuario}:{senha}@{host}:{porta}/{banco}"
 
 
 def _contexto_log(status_code=None):
@@ -34,6 +46,11 @@ def create_app():
     configure_logging()
     app = Flask(__name__)
     limiter.init_app(app)
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = _sqlalchemy_database_uri()
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
+    db.init_app(app)
+    from app import models  # noqa: F401 — registra as classes ORM em db.metadata
 
     @app.before_request
     def _atribuir_request_id():

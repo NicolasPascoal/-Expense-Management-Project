@@ -24,10 +24,11 @@ from app.database.db import PostgreSQLConnectionWrapper, init_db
 # Módulos que fizeram `from app.database.db import get_db_connection` diretamente —
 # cada um criou sua própria referência ao símbolo, então precisa ser repatchado
 # individualmente para os testes desta tarefa enxergarem a conexão de teste.
+# app.controller.signup_controller NÃO está aqui: foi migrado para SQLAlchemy
+# (Tarefa 3.1) e usa a fixture orm_session, não get_db_connection.
 _MODULOS_COM_GET_DB_CONNECTION = [
     "app.controller.usuarios_controller",
     "app.controller.auth_controller",
-    "app.controller.signup_controller",
     "app.controller.lancamentos_controller",
     "app.controller.servicos_controller",
     "app.controller.tarefas_controller",
@@ -81,3 +82,36 @@ def db_session(monkeypatch):
 
     raw_conn.rollback()
     raw_conn.close()
+
+
+@pytest.fixture(scope="session")
+def _orm_app():
+    """App Flask completo (com db.init_app já feito) para os módulos migrados
+    para SQLAlchemy (Tarefa 3.1). Criado uma vez por sessão — init_db() é
+    idempotente (CREATE TABLE IF NOT EXISTS), então recriá-lo por teste seria
+    só desperdício."""
+    from app import create_app
+    return create_app()
+
+
+@pytest.fixture
+def orm_session(_orm_app, monkeypatch):
+    """Isola o teste: o código sob teste chama db.session.commit() normalmente
+    (ex.: signup_controller), mas aqui commit() vira flush() — os dados ficam
+    visíveis para queries dentro do mesmo teste sem nunca serem commitados de
+    verdade no Postgres. Rollback explícito no teardown descarta tudo.
+
+    (Tentativa anterior com join_transaction_mode="create_savepoint" não
+    isolava de verdade com o Flask-SQLAlchemy — dado vazava pro banco de teste
+    entre execuções da suíte. Substituir commit por flush é mais simples e
+    não depende de como o Flask-SQLAlchemy resolve engine/bind internamente.)
+    """
+    from app.extensions import db as _db
+
+    with _orm_app.app_context():
+        monkeypatch.setattr(_db.session, "commit", _db.session.flush)
+
+        yield _db.session
+
+        _db.session.rollback()
+        _db.session.remove()
