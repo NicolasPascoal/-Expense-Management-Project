@@ -40,7 +40,7 @@ Ao terminar (ou pausar) uma tarefa:
 |---|---|---|---|---|
 | 3.1 — ORM (SQLAlchemy) + migrations (Alembic) | [ ] | | | Ideal iniciar junto com 1.1 |
 | 3.2 — Migrar campos dinâmicos TEXT → JSONB | [ ] | | | Depende de 3.1 |
-| 3.3 — Suíte de testes automatizados | [ ] | | | Ver docs/Decisions.md (ADR-001) para stack de teste |
+| 3.3 — Suíte de testes automatizados | [~] | 2026-08-01 | | Auditoria (não foi trabalho novo desta sessão): a suíte já existia organicamente, acumulada nas Tarefas 1.2/1.3/6.3/7.1/7.2/5.1 — 50 testes, `pytest` + Postgres real por transação com rollback (ADR-001). **Cobertura confirmada**: isolamento cross-tenant testado para as 10 entidades principais da matriz (`docs/Authorization.md` seção 6) — lançamentos, categorias, contas, orçamentos, entradas, auditoria, projetos, usuários, requisições, tarefas; autorização por papel testada (`test_autorizacao.py`, matriz admin/prestador/user). **Não cumprido** (critério de aceite explícito do roadmap): "pipeline de CI roda a suíte a cada mudança de código" — não existe CI ainda (Tarefa 3.4 não iniciada), então nada impede hoje um código quebrado ser mergeado sem rodar os testes. Fica `[~]` em vez de `[x]` por causa desse gap; resolve quando 3.4 for feita |
 | 3.4 — Pipeline de CI/CD | [ ] | | | Depende de 3.3 |
 
 ## Fase 1 — MVP Comercial

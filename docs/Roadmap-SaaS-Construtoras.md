@@ -157,9 +157,9 @@ Depois disso, o roadmap segue a lógica: **(1) conseguir cobrar** → **(2) ter 
 - **Estimativa:** 5-8 dias (fundação inicial; depois é trabalho contínuo por feature)
 - **Riscos:** Pressão de prazo comercial tende a fazer esta tarefa ser cortada — deve ser tratada como não-negociável dado o modelo de negócio (dinheiro de terceiros).
 - **Critérios de aceite:**
-  - [ ] Existe teste automatizado cobrindo tentativa de acesso cross-tenant para cada entidade principal
-  - [ ] Existe teste automatizado cobrindo cada regra de autorização por papel
-  - [ ] Pipeline de CI (Tarefa 3.4) roda esta suíte a cada mudança de código
+  - [x] Existe teste automatizado cobrindo tentativa de acesso cross-tenant para cada entidade principal
+  - [x] Existe teste automatizado cobrindo cada regra de autorização por papel
+  - [ ] Pipeline de CI (Tarefa 3.4) roda esta suíte a cada mudança de código — pendente, ver Tarefa 3.4
 
 ### Tarefa 3.4 — Pipeline de CI/CD
 - **Prioridade:** P1
