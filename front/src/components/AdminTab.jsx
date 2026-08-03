@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import { btnStyle, inputStyle } from "../utils/styles";
 
-export function AdminTab({ user, askConfirm, usuarios, fetchUsuarios }) {
+export function AdminTab({ askConfirm, usuarios, fetchUsuarios }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);

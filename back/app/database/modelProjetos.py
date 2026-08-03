@@ -1,5 +1,3 @@
-import json
-
 def create_projetos_tables(cursor):
     """
     Cria as tabelas relacionadas a Projetos e Lancamentos, e insere as colunas padrao.

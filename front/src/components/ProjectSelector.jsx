@@ -1,4 +1,4 @@
-import { btnStyle, inputStyle } from "../utils/styles";
+import { inputStyle } from "../utils/styles";
 import { Plus, Trash2, AlertTriangle } from "lucide-react";
 
 export function ProjectSelector({ 

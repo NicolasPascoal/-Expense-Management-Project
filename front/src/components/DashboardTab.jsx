@@ -3,7 +3,7 @@ import { Card } from "./Card";
 import { fmt, parseVal } from "../utils/format";
 import { BAR_COLORS } from "../data/constants";
 import { DollarSign, ClipboardList, Tag, Users, BarChart3, PieChart as PieChartIcon } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, Label } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Label } from "recharts";
 
 export function DashboardTab({ totalGeral, dados, porCategoria, porConta }) {
   const [chartType, setChartType] = useState("pie");

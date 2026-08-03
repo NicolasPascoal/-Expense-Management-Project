@@ -1,6 +1,4 @@
 import logging
-import psycopg2
-from psycopg2.extras import DictCursor
 from psycopg2 import pool
 from dotenv import load_dotenv
 import os
@@ -182,7 +180,7 @@ def get_db_connection():
     """
     global _db_pool
     if _db_pool is None:
-        _db_pool = psycopg2.pool.SimpleConnectionPool(
+        _db_pool = pool.SimpleConnectionPool(
             1, 20,
             user=PG_USER,
             password=PG_PASSWORD,

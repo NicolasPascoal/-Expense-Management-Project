@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { api } from "../services/api";
-import { FORMAS, DEFAULT_COLUMNS } from "../data/constants";
+import { DEFAULT_COLUMNS } from "../data/constants";
 import { parseVal } from "../utils/format";
 
 export function useExpenses() {
@@ -304,7 +304,7 @@ export function useExpenses() {
       setProjetos([...projetos, novo]);
       setProjetoAtivo(novo);
       setShowProjectModal(false);
-    } catch (e) {
+    } catch {
       alert("Erro ao criar projeto");
     }
   };
@@ -316,7 +316,7 @@ export function useExpenses() {
       setProjetos(novosProjetos);
       setProjetoAtivo(novosProjetos.length > 0 ? novosProjetos[0] : null);
       if (novosProjetos.length === 0) setDados([]);
-    } catch (e) {
+    } catch {
       alert("Erro ao excluir projeto");
     }
   };
@@ -422,7 +422,7 @@ export function useExpenses() {
       }
       setForm({});
       setShowForm(false);
-    } catch (e) {
+    } catch {
       alert("Erro ao salvar lançamento");
     }
   };
@@ -540,7 +540,7 @@ export function useExpenses() {
             targetProjeto = await api.createProjeto({ nome, colunas });
             setProjetos(prev => [...prev, targetProjeto]);
             setProjetoAtivo(targetProjeto);
-        } catch (err) {
+        } catch {
             return alert("Erro ao criar projeto automático");
         }
       }

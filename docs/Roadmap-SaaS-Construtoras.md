@@ -170,8 +170,8 @@ Depois disso, o roadmap segue a lógica: **(1) conseguir cobrar** → **(2) ter 
 - **Estimativa:** 2-3 dias
 - **Riscos:** Baixo.
 - **Critérios de aceite:**
-  - [ ] Todo PR roda testes e lint automaticamente antes de poder ser mesclado
-  - [ ] Deploy para staging acontece automaticamente após merge na branch principal
+  - [ ] Todo PR roda testes e lint automaticamente antes de poder ser mesclado — pipeline pronta e testada (`.github/workflows/ci.yml`), falta só ativar a regra de proteção de branch no GitHub (configuração do repositório, decisão do usuário)
+  - [ ] Deploy para staging acontece automaticamente após merge na branch principal — depende de webhook do Portainer (staging roda atrás de VPN no Umbrel do usuário), decisão pendente
 
 ---
 

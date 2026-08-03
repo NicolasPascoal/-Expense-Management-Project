@@ -1,4 +1,3 @@
-import { FORMAS } from "../data/constants";
 import { fmt, parseVal } from "../utils/format";
 import { inputStyle, btnStyle, td, catColor } from "../utils/styles";
 import { Search, Pencil, Trash2 } from "lucide-react";
@@ -120,7 +119,7 @@ export function LancamentosTab({
                             const { api } = await import("../services/api");
                             await api.deleteLancamento(d.id);
                             setDados(dados.filter(x => x.id !== d.id));
-                          } catch (e) {
+                          } catch {
                             alert("Erro ao excluir lançamento");
                           }
                         }
