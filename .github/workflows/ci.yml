@@ -72,3 +72,11 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  deploy-staging:
+    runs-on: [self-hosted, umbrel]
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Disparar redeploy do stack de dev/staging no Portainer
+        run: curl -fsS --max-time 30 -X POST "${{ secrets.PORTAINER_WEBHOOK_URL }}"

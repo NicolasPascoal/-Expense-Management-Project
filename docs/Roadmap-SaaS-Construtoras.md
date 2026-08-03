@@ -159,7 +159,7 @@ Depois disso, o roadmap segue a lógica: **(1) conseguir cobrar** → **(2) ter 
 - **Critérios de aceite:**
   - [x] Existe teste automatizado cobrindo tentativa de acesso cross-tenant para cada entidade principal
   - [x] Existe teste automatizado cobrindo cada regra de autorização por papel
-  - [ ] Pipeline de CI (Tarefa 3.4) roda esta suíte a cada mudança de código — pendente, ver Tarefa 3.4
+  - [x] Pipeline de CI (Tarefa 3.4) roda esta suíte a cada mudança de código
 
 ### Tarefa 3.4 — Pipeline de CI/CD
 - **Prioridade:** P1
@@ -170,8 +170,8 @@ Depois disso, o roadmap segue a lógica: **(1) conseguir cobrar** → **(2) ter 
 - **Estimativa:** 2-3 dias
 - **Riscos:** Baixo.
 - **Critérios de aceite:**
-  - [ ] Todo PR roda testes e lint automaticamente antes de poder ser mesclado — pipeline pronta e testada (`.github/workflows/ci.yml`), falta só ativar a regra de proteção de branch no GitHub (configuração do repositório, decisão do usuário)
-  - [ ] Deploy para staging acontece automaticamente após merge na branch principal — depende de webhook do Portainer (staging roda atrás de VPN no Umbrel do usuário), decisão pendente
+  - [x] Todo PR roda testes e lint automaticamente antes de poder ser mesclado — `.github/workflows/ci.yml` + proteção de branch ativada no GitHub (`main` exige checks `backend`+`frontend` verdes)
+  - [x] Deploy para staging acontece automaticamente após merge na branch principal — job `deploy-staging` chama webhook do Portainer via runner self-hosted no Umbrel do usuário (só ativo em push na `main`, nunca em PR de fora — repo é público)
 
 ---
 
