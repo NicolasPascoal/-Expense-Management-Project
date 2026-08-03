@@ -1,8 +1,9 @@
-import psycopg2
-from psycopg2.extras import DictCursor
+import logging
 from psycopg2 import pool
 from dotenv import load_dotenv
 import os
+
+logger = logging.getLogger(__name__)
 
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -84,7 +85,7 @@ class PostgreSQLCursorWrapper:
             else:
                 self._cursor.execute(sql_pg)
         except Exception as e:
-            print(f"\n[QUERY FAILED] {sql_pg} | Params: {params} | Error: {e}")
+            logger.error("Falha ao executar query", exc_info=e, extra={"sql": sql_pg, "params": params})
             raise e
 
         # 4. Capturar lastrowid para comandos INSERT usando a função lastval()
@@ -179,7 +180,7 @@ def get_db_connection():
     """
     global _db_pool
     if _db_pool is None:
-        _db_pool = psycopg2.pool.SimpleConnectionPool(
+        _db_pool = pool.SimpleConnectionPool(
             1, 20,
             user=PG_USER,
             password=PG_PASSWORD,
@@ -190,11 +191,15 @@ def get_db_connection():
     conn = _db_pool.getconn()
     return PostgreSQLConnectionWrapper(conn, _db_pool)
 
+from app.database.modelEmpresas import create_empresas_tables
 from app.database.modelProjetos import create_projetos_tables
 from app.database.modelCategoria import create_categorias_tables
 from app.database.modelUsuarios import create_usuarios_tables
 from app.database.modelRequisicoes import create_requisicoes_tables
 from app.database.modelTarefas import create_tarefas_tables
+from app.database.modelOrcamentos import create_orcamentos_tables
+from app.database.modelEntradas import create_entradas_tables
+from app.database.modelAuditoria import create_auditoria_tables
 
 def init_db():
     """
@@ -203,13 +208,17 @@ def init_db():
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     # Executa a criação de cada tabela na ordem de dependência correta
+    create_empresas_tables(cursor)
     create_projetos_tables(cursor)
     create_usuarios_tables(cursor)
     create_categorias_tables(cursor)
     create_requisicoes_tables(cursor)
     create_tarefas_tables(cursor)
-    
+    create_orcamentos_tables(cursor)
+    create_entradas_tables(cursor)
+    create_auditoria_tables(cursor)
+
     conn.commit()
     conn.close()

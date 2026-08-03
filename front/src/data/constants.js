@@ -20,3 +20,4 @@ export const DEFAULT_COLUMNS = [
   { name: "conta", label: "Conta", type: "select", options: CONTAS },
   { name: "obs", label: "Observações", type: "textarea", fullWidth: true }
 ];
+

@@ -3,7 +3,7 @@ import { api } from "../services/api";
 import { btnStyle } from "../utils/styles";
 import { Construction } from "lucide-react";
 
-export function Login({ onLogin }) {
+export function Login({ onLogin, onShowSignup }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -47,7 +47,7 @@ export function Login({ onLogin }) {
             <Construction size={48} />
           </div>
         </div>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e293b" }}>Gestão de Despesas</h1>
+        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#1e293b" }}>Gabaro</h1>
         <p style={{ color: "#64748b", marginTop: 8, marginBottom: 32 }}>Faça login para acessar o painel</p>
 
         <form onSubmit={handleSubmit} style={{ textAlign: "left" }}>
@@ -119,8 +119,15 @@ export function Login({ onLogin }) {
           </button>
         </form>
         
-        <p style={{ marginTop: 24, fontSize: 12, color: "#94a3b8" }}>
-          Ambiente restrito e seguro.
+        <p style={{ marginTop: 24, fontSize: 13, color: "#64748b" }}>
+          Ainda não tem conta?{" "}
+          <button
+            type="button"
+            onClick={onShowSignup}
+            style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 600, cursor: "pointer", fontSize: 13, padding: 0 }}
+          >
+            Criar conta
+          </button>
         </p>
       </div>
     </div>

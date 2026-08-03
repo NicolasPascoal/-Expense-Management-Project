@@ -41,6 +41,16 @@ export const api = {
     return data;
   },
 
+  async signup(nomeEmpresa, username, password, colunas) {
+    const data = await callApi(`${API_URL}/signup`, {
+      method: 'POST',
+      body: JSON.stringify({ nome_empresa: nomeEmpresa, username, password, colunas })
+    });
+    sessionStorage.setItem('token', data.token);
+    sessionStorage.setItem('user', JSON.stringify(data.user));
+    return data;
+  },
+
   // Lançamentos
   async getLancamentos(projetoId) {
     const url = projetoId ? `${API_URL}/lancamentos?projeto_id=${projetoId}` : `${API_URL}/lancamentos`;
@@ -190,5 +200,48 @@ export const api = {
     return callApi(`${API_URL}/tarefas/${id}`, {
       method: 'DELETE'
     });
+  },
+
+  // Orçamentos
+  async getOrcamentos(projetoId) {
+    const url = projetoId ? `${API_URL}/orcamentos?projeto_id=${projetoId}` : `${API_URL}/orcamentos`;
+    return callApi(url);
+  },
+
+  async upsertOrcamento(projetoId, categoriaId, valorOrcado) {
+    return callApi(`${API_URL}/orcamentos`, {
+      method: 'POST',
+      body: JSON.stringify({ projeto_id: projetoId, categoria_id: categoriaId, valor_orcado: valorOrcado })
+    });
+  },
+
+  async deleteOrcamento(id) {
+    return callApi(`${API_URL}/orcamentos/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  // Fluxo de Caixa (Entradas)
+  async getEntradas(projetoId) {
+    const url = projetoId ? `${API_URL}/entradas?projeto_id=${projetoId}` : `${API_URL}/entradas`;
+    return callApi(url);
+  },
+
+  async createEntrada(projetoId, descricao, valor, data) {
+    return callApi(`${API_URL}/entradas`, {
+      method: 'POST',
+      body: JSON.stringify({ projeto_id: projetoId, descricao, valor, data })
+    });
+  },
+
+  async deleteEntrada(id) {
+    return callApi(`${API_URL}/entradas/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  // Auditoria
+  async getAuditoria() {
+    return callApi(`${API_URL}/auditoria`);
   }
 };

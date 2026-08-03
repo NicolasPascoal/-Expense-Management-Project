@@ -11,16 +11,17 @@ def create_usuarios_tables(cursor):
             username VARCHAR(255) NOT NULL UNIQUE,
             password VARCHAR(255) NOT NULL,
             is_admin INTEGER DEFAULT 0,
-            role VARCHAR(50) DEFAULT 'prestador'
+            role VARCHAR(50) DEFAULT 'prestador',
+            empresa_id INTEGER NOT NULL REFERENCES empresas(id)
         )
     ''')
 
-    # Seed inicial admin
+    # Seed inicial admin, vinculado à empresa seed (id=1).
+    # O backfill de role a partir de is_admin (antes rodava a cada boot aqui)
+    # virou migration de dado única — ver migrations/versions/61a73b52f4cf_*.py
+    # (Tarefa 3.1, STATUS.md).
     cursor.execute("SELECT COUNT(*) FROM usuarios")
     if cursor.fetchone()[0] == 0:
-        cursor.execute("INSERT INTO usuarios (username, password, is_admin, role) VALUES ('admin', ?, 1, 'admin')", 
+        cursor.execute("INSERT INTO usuarios (username, password, is_admin, role, empresa_id) VALUES ('admin', ?, 1, 'admin', 1)",
                        (generate_password_hash("admin"),))
         cursor.execute("SELECT setval(pg_get_serial_sequence('usuarios', 'id'), COALESCE((SELECT MAX(id) FROM usuarios), 1))")
-    else:
-        cursor.execute("UPDATE usuarios SET is_admin = 1, role = 'admin' WHERE username = 'admin'")
-        cursor.execute("UPDATE usuarios SET role = 'admin' WHERE is_admin = 1")

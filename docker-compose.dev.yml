@@ -1,0 +1,73 @@
+version: "3.8"
+
+# Stack de desenvolvimento/staging, isolada do docker-compose.yml de produção:
+# nomes de container, portas de host, volume e rede diferentes, para poder
+# rodar ao lado de uma futura stack de produção no mesmo host sem conflito.
+# Segredos (PGPASSWORD, JWT_SECRET_KEY) NÃO ficam neste arquivo — defina-os
+# como variáveis de ambiente do stack na UI do Portainer.
+
+services:
+  db_postgres:
+    image: postgres:15-alpine
+    container_name: gabaro_dev_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${PGUSER:-postgres}
+      - POSTGRES_PASSWORD=${PGPASSWORD:?defina PGPASSWORD nas variáveis do stack}
+      - POSTGRES_DB=${PGDATABASE:-expense_management}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - rede_projeto_dev
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${PGUSER:-postgres} -d ${PGDATABASE:-expense_management}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- BACK-END (FLASK) ---
+  backend:
+    build: ./back
+    container_name: gabaro_dev_backend
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    environment:
+      - PGUSER=${PGUSER:-postgres}
+      - PGPASSWORD=${PGPASSWORD:?defina PGPASSWORD nas variáveis do stack}
+      - PGHOST=db_postgres
+      - PGPORT=5432
+      - PGDATABASE=${PGDATABASE:-expense_management}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?defina JWT_SECRET_KEY nas variáveis do stack}
+      - FLASK_DEBUG=False
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}
+    depends_on:
+      db_postgres:
+        condition: service_healthy
+    networks:
+      - rede_projeto_dev
+
+  # --- FRONT-END (REACT) ---
+  frontend:
+    build: ./front
+    container_name: gabaro_dev_frontend
+    restart: unless-stopped
+    ports:
+      - "3051:80"
+    depends_on:
+      - backend
+    networks:
+      - rede_projeto_dev
+
+volumes:
+  postgres_data_dev:
+
+networks:
+  rede_projeto_dev:
+    driver: bridge

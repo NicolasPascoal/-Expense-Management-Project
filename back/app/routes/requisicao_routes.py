@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, g
 from app.database.db import get_db_connection
 from app.utils.auth_middleware import token_required, admin_required
+from app.utils.auditoria import log_auditoria
 
 requisicao_bp = Blueprint('requisicoes', __name__)
 
@@ -12,7 +13,11 @@ def listar_requisicoes():
     cursor = conn.cursor()
     
     if user.get('is_admin'):
-        cursor.execute('SELECT r.*, u.username FROM requisicoes_materiais r JOIN usuarios u ON r.usuario_id = u.id ORDER BY data_criacao DESC')
+        cursor.execute(
+            'SELECT r.*, u.username FROM requisicoes_materiais r JOIN usuarios u ON r.usuario_id = u.id '
+            'WHERE u.empresa_id = ? ORDER BY data_criacao DESC',
+            (user['empresa_id'],)
+        )
     else:
         cursor.execute('SELECT r.*, u.username FROM requisicoes_materiais r JOIN usuarios u ON r.usuario_id = u.id WHERE r.usuario_id = ? ORDER BY data_criacao DESC', (user['id'],))
         
@@ -41,7 +46,8 @@ def criar_requisicao():
     req_id = cursor.lastrowid
     conn.commit()
     conn.close()
-    
+
+    log_auditoria(user['empresa_id'], user['id'], 'requisicao', req_id, 'criar', material)
     return jsonify({'id': req_id, 'status': 'Pendente'}), 201
 
 @requisicao_bp.route('/requisicoes/<int:id>/status', methods=['PUT'])
@@ -52,11 +58,19 @@ def atualizar_status(id):
     
     if not status:
         return jsonify({'erro': 'Status é obrigatório'}), 400
-        
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('UPDATE requisicoes_materiais SET status = ? WHERE id = ?', (status, id))
+    cursor.execute(
+        'UPDATE requisicoes_materiais SET status = ? '
+        'WHERE id = ? AND usuario_id IN (SELECT id FROM usuarios WHERE empresa_id = ?)',
+        (status, id, g.user['empresa_id'])
+    )
+    atualizado = cursor.rowcount > 0
     conn.commit()
     conn.close()
-    
+
+    if not atualizado:
+        return jsonify({'erro': 'Não encontrado'}), 404
+    log_auditoria(g.user['empresa_id'], g.user['id'], 'requisicao', id, 'editar', f'status -> {status}')
     return jsonify({'mensagem': 'Status atualizado'})

@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "front-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--host"],
+      "cwd": "front",
+      "port": 5173
+    },
+    {
+      "name": "back-dev",
+      "runtimeExecutable": "py",
+      "runtimeArgs": ["-3", "main.py"],
+      "cwd": "back",
+      "port": 5000
+    }
+  ]
+}

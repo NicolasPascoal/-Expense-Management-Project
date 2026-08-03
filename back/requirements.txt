@@ -6,8 +6,18 @@ Werkzeug==3.1.8
 # Authentication
 PyJWT==2.8.0
 
+# Rate limiting (proteção de força bruta no login — Tarefa 2.2)
+Flask-Limiter==3.8.0
+
 # Database Driver (PostgreSQL)
 psycopg2-binary==2.9.12
+
+# ORM + migrations versionadas (Tarefa 3.1 — introdução gradual, ver STATUS.md)
+# SQLAlchemy >=2.0.36 exigido: versões anteriores quebram em Python 3.13
+# (AssertionError em sqlalchemy.sql.elements.SQLCoreOperations / TypingOnly).
+SQLAlchemy==2.0.51
+Flask-SQLAlchemy==3.1.1
+alembic==1.18.4
 
 # Utilities
 python-dotenv==1.0.1
@@ -17,3 +27,6 @@ gunicorn==22.0.0
 
 # Production Server (Windows)
 waitress==3.0.2
+
+# Testes automatizados (ADR-001 — ver docs/Decisions.md)
+pytest==8.3.3
