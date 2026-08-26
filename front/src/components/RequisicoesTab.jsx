@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { inputStyle, btnStyle, td } from "../utils/styles";
 import { ClipboardCheck, Package, Clock, Truck, CheckCircle, XCircle } from "lucide-react";
+import { can } from "../utils/permissions";
 
 export function RequisicoesTab({ 
   user, 
@@ -79,7 +80,7 @@ export function RequisicoesTab({
       <div style={{ background: "#fff", padding: 24, borderRadius: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
         <h2 style={{ margin: "0 0 20px 0", fontSize: 18, display: "flex", alignItems: "center", gap: 8 }}>
           <Package size={20} color="#16a34a" /> 
-          {user?.is_admin ? "Gerenciamento de Requisições" : "Minhas Requisições"}
+          {can(user, "aprovar_requisicoes") ? "Gerenciamento de Requisições" : "Minhas Requisições"}
         </h2>
         
         <div className="table-wrap">
@@ -91,7 +92,7 @@ export function RequisicoesTab({
                 <th style={{ ...td, textAlign: "left" }}>Função</th>
                 <th style={{ ...td, textAlign: "left" }}>Material</th>
                 <th style={{ ...td, textAlign: "left" }}>Status</th>
-                {user?.is_admin && <th style={{ ...td, textAlign: "right" }}>Ações</th>}
+                {can(user, "aprovar_requisicoes") && <th style={{ ...td, textAlign: "right" }}>Ações</th>}
               </tr>
             </thead>
             <tbody>
@@ -116,7 +117,7 @@ export function RequisicoesTab({
                       {statusColors[r.status]?.icon} {r.status}
                     </span>
                   </td>
-                  {user?.is_admin && (
+                  {can(user, "aprovar_requisicoes") && (
                     <td style={{ ...td, textAlign: "right" }}>
                       <select 
                         value={r.status} 
@@ -131,7 +132,7 @@ export function RequisicoesTab({
               ))}
               {requisicoes.length === 0 && (
                 <tr>
-                  <td colSpan={user?.is_admin ? 6 : 5} style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>
+                  <td colSpan={can(user, "aprovar_requisicoes") ? 6 : 5} style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>
                     Nenhuma requisição encontrada.
                   </td>
                 </tr>

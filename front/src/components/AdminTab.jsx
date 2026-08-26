@@ -2,11 +2,17 @@ import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import { btnStyle, inputStyle } from "../utils/styles";
 
+const PAPEIS = [
+  { valor: "admin", label: "Admin" },
+  { valor: "gestor_obra", label: "Gestor de Obra" },
+  { valor: "financeiro", label: "Financeiro" },
+  { valor: "prestador", label: "Prestador" },
+];
+
 export function AdminTab({ askConfirm, usuarios, fetchUsuarios }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isPrestador, setIsPrestador] = useState(true);
+  const [role, setRole] = useState("prestador");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,13 +26,11 @@ export function AdminTab({ askConfirm, usuarios, fetchUsuarios }) {
     setError("");
     setLoading(true);
     try {
-      // Determina o role. Se admin, role admin. Se apenas prestador, role prestador.
-      const role = isAdmin ? 'admin' : (isPrestador ? 'prestador' : 'user');
+      const isAdmin = role === "admin";
       await api.createUsuario(username, password, isAdmin, role);
       setUsername("");
       setPassword("");
-      setIsAdmin(false);
-      setIsPrestador(true);
+      setRole("prestador");
       fetchUsuarios();
     } catch (err) {
       setError(err.message);
@@ -59,7 +63,7 @@ export function AdminTab({ askConfirm, usuarios, fetchUsuarios }) {
       <div style={{ background: "#fff", padding: 24, borderRadius: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.1)", marginBottom: 24 }}>
         <h2 style={{ margin: "0 0 16px 0", fontSize: 18 }}>Gestão de Acessos</h2>
 
-        <form onSubmit={handleCreateUser} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto auto auto", gap: 12, alignItems: "end" }}>
+        <form onSubmit={handleCreateUser} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 12, alignItems: "end" }}>
           <div>
             <label style={{ fontSize: 12, color: "#64748b", display: "block", marginBottom: 4 }}>Usuário</label>
             <input
@@ -79,23 +83,17 @@ export function AdminTab({ askConfirm, usuarios, fetchUsuarios }) {
               required
             />
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, paddingBottom: 10 }}>
-            <input
-              type="checkbox"
-              id="is_admin"
-              checked={isAdmin}
-              onChange={e => setIsAdmin(e.target.checked)}
-            />
-            <label htmlFor="is_admin" style={{ fontSize: 13, cursor: "pointer" }}>Admin</label>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, paddingBottom: 10 }}>
-            <input
-              type="checkbox"
-              id="is_prestador"
-              checked={isPrestador}
-              onChange={e => setIsPrestador(e.target.checked)}
-            />
-            <label htmlFor="is_prestador" style={{ fontSize: 13, cursor: "pointer" }}>Prestador</label>
+          <div>
+            <label style={{ fontSize: 12, color: "#64748b", display: "block", marginBottom: 4 }}>Papel</label>
+            <select
+              style={{ ...inputStyle, margin: 0 }}
+              value={role}
+              onChange={e => setRole(e.target.value)}
+            >
+              {PAPEIS.map(p => (
+                <option key={p.valor} value={p.valor}>{p.label}</option>
+              ))}
+            </select>
           </div>
           <button type="submit" disabled={loading} style={btnStyle("#2563eb")}>
             {loading ? "..." : "Criar Usuário"}
@@ -139,7 +137,7 @@ export function AdminTab({ askConfirm, usuarios, fetchUsuarios }) {
                     fontWeight: 600,
                     textTransform: "uppercase"
                   }}>
-                    {u.role || "USUÁRIO"}
+                    {PAPEIS.find(p => p.valor === u.role)?.label || u.role || "USUÁRIO"}
                   </span>
                 </td>
                 <td style={{ padding: "12px 16px", textAlign: "right" }}>

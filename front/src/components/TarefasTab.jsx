@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { inputStyle } from "../utils/styles";
+import { can } from "../utils/permissions";
 import {
   Plus,
   Trash2,
@@ -24,7 +25,7 @@ export function TarefasTab({ user, tarefas, usuarios, createTarefa, updateTarefa
   const [prestadorId, setPrestadorId] = useState("");
   const [editStates, setEditStates] = useState({}); // Controla quais tarefas estão em modo edição para o prestador
 
-  const isAdmin = user?.is_admin;
+  const podeGerenciar = can(user, "gerenciar_tarefas");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -71,7 +72,7 @@ export function TarefasTab({ user, tarefas, usuarios, createTarefa, updateTarefa
   return (
     <div style={{ maxWidth: 900, margin: "0 auto" }}>
       {/* Header Admin */}
-      {isAdmin && (
+      {podeGerenciar && (
         <div style={{ marginBottom: 24 }}>
           {!showAdd ? (
             <button
@@ -171,7 +172,7 @@ export function TarefasTab({ user, tarefas, usuarios, createTarefa, updateTarefa
                   </span>
                 </h4>
 
-                {isAdmin && (
+                {podeGerenciar && (
                   <button
                     onClick={() => askConfirm({
                       title: "Excluir tarefa?",
@@ -204,7 +205,7 @@ export function TarefasTab({ user, tarefas, usuarios, createTarefa, updateTarefa
                     <StickyNote size={12} /> observações do prestador
                   </label>
 
-                  {!isAdmin && !editStates[t.id] && (
+                  {!podeGerenciar && !editStates[t.id] && (
                     <button
                       onClick={() => setEditStates(prev => ({ ...prev, [t.id]: { observacoes: t.observacoes || "" } }))}
                       style={{ border: "none", background: "none", color: "var(--blue)", fontSize: 12, fontWeight: 500, cursor: "pointer" }}
@@ -251,7 +252,7 @@ export function TarefasTab({ user, tarefas, usuarios, createTarefa, updateTarefa
               </div>
 
               {/* Ações de Status (Somente Prestador ou Admin) */}
-              {(!isAdmin || (isAdmin && t.prestador_id === user.id)) && (
+              {(!podeGerenciar || (podeGerenciar && t.prestador_id === user.id)) && (
                 <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {t.status !== "Pendente" && (
                     <button

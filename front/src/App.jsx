@@ -16,6 +16,7 @@ import { TarefasTab } from "./components/TarefasTab";
 import { OrcamentoTab } from "./components/OrcamentoTab";
 import { FluxoCaixaTab } from "./components/FluxoCaixaTab";
 import { TimelineTab } from "./components/TimelineTab";
+import { can } from "./utils/permissions";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -35,9 +36,9 @@ export default function App() {
   const expenses = useExpenses();
   const [authView, setAuthView] = useState("login");
 
-  // Garantir que o prestador caia na aba correta se estiver em uma aba proibida
+  // Garantir que quem não tem acesso financeiro caia na aba correta se estiver em uma aba proibida
   useEffect(() => {
-    if (expenses.user?.role === "prestador" && !expenses.user?.is_admin && expenses.tab !== "requisicoes" && expenses.tab !== "tarefas") {
+    if (!can(expenses.user, "acesso_financeiro") && expenses.tab !== "requisicoes" && expenses.tab !== "tarefas") {
       expenses.setTab("tarefas");
     }
   }, [expenses.user?.role, expenses.user?.is_admin, expenses.tab]);
@@ -67,7 +68,7 @@ export default function App() {
 
   // Filtra as abas baseado no papel do usuário
   let tabs = allTabs;
-  if (expenses.user?.role === "prestador" && !expenses.user?.is_admin) {
+  if (!can(expenses.user, "acesso_financeiro")) {
     tabs = [
       ["tarefas", "Tarefas", ListTodo],
       ["requisicoes", "Materiais", ClipboardCheck]
@@ -130,8 +131,8 @@ export default function App() {
               {tabs.find(x => x[0] === expenses.tab)?.[1] || "Painel"}
             </h1>
             
-            {/* Ações Rápidas (Ocultas para Prestadores) */}
-            {(!expenses.user?.role || expenses.user?.role !== "prestador" || expenses.user?.is_admin) && (
+            {/* Ações Rápidas (só quem tem acesso financeiro) */}
+            {can(expenses.user, "acesso_financeiro") && (
               <div className="workspace-actions">
                 <button
                   onClick={() => { expenses.setShowForm(true); expenses.setEditId(null); expenses.setForm({}); expenses.setTab("lancamentos"); }}

@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, g
 from app.database.db import get_db_connection
-from app.utils.auth_middleware import token_required, admin_required
+from app.utils.auth_middleware import token_required, permissao_required
 from app.utils.auditoria import log_auditoria
+from app.utils.permissions import tem_permissao
 
 requisicao_bp = Blueprint('requisicoes', __name__)
 
@@ -12,7 +13,7 @@ def listar_requisicoes():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    if user.get('is_admin'):
+    if tem_permissao(user, 'aprovar_requisicoes'):
         cursor.execute(
             'SELECT r.*, u.username FROM requisicoes_materiais r JOIN usuarios u ON r.usuario_id = u.id '
             'WHERE u.empresa_id = ? ORDER BY data_criacao DESC',
@@ -51,7 +52,7 @@ def criar_requisicao():
     return jsonify({'id': req_id, 'status': 'Pendente'}), 201
 
 @requisicao_bp.route('/requisicoes/<int:id>/status', methods=['PUT'])
-@admin_required
+@permissao_required('aprovar_requisicoes')
 def atualizar_status(id):
     dados = request.get_json()
     status = dados.get('status')

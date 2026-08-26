@@ -3,6 +3,8 @@ import os
 from functools import wraps
 from flask import request, jsonify, g
 
+from app.utils.permissions import tem_permissao
+
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError(
@@ -45,10 +47,16 @@ def token_required(f):
     return decorated
 
 def non_prestador_required(f):
-    """Bloqueia role='prestador' — usar depois de @token_required, que já populou g.user."""
+    """Exige a permissão 'acesso_financeiro' (Tarefa 6.1) — usar depois de
+    @token_required, que já populou g.user. Nome mantido por compatibilidade
+    com as rotas existentes (lançamentos/categorias/contas/orçamentos/
+    entradas/auditoria); o que mudou foi a checagem interna: antes era
+    "libera tudo exceto role='prestador'" (allow-all-except), agora é uma
+    lista de permissão positiva — um papel novo/desconhecido não passa mais
+    por acidente (era o bug documentado do role='user')."""
     @wraps(f)
     def decorated(*args, **kwargs):
-        if g.user.get('role') == 'prestador':
+        if not tem_permissao(g.user, 'acesso_financeiro'):
             return jsonify({'erro': 'Acesso negado para este papel de usuário.'}), 403
         return f(*args, **kwargs)
     return decorated
@@ -64,3 +72,18 @@ def admin_required(f):
             return jsonify({'erro': 'Acesso negado. Apenas administradores!'}), 403
         return f(*args, **kwargs)
     return decorated
+
+def permissao_required(nome_permissao):
+    """Exige usuário autenticado com a permissão indicada (Tarefa 6.1) —
+    is_admin sempre passa. Usar como @permissao_required('nome_da_permissao')."""
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            erro = _autenticar()
+            if erro:
+                return erro
+            if not tem_permissao(g.user, nome_permissao):
+                return jsonify({'erro': 'Acesso negado para este papel de usuário.'}), 403
+            return f(*args, **kwargs)
+        return decorated
+    return decorator

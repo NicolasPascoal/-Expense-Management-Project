@@ -281,8 +281,8 @@ Depois disso, o roadmap segue a lógica: **(1) conseguir cobrar** → **(2) ter 
 - **Estimativa:** 6-8 dias
 - **Riscos:** Se mal desenhado, complexidade de permissões pode confundir o próprio usuário final (que é, tipicamente, pouco afeito a sistemas complexos) — exige validação de UX junto com construtoras piloto.
 - **Critérios de aceite:**
-  - [ ] É possível criar um usuário com papel "financeiro" que vê e edita lançamentos, mas não gerencia usuários
-  - [ ] É possível criar um usuário com papel "gestor de obra" que aprova requisições e gerencia tarefas, mas não vê lançamentos de outras obras que não gerencia
+  - [x] É possível criar um usuário com papel "financeiro" que vê e edita lançamentos, mas não gerencia usuários
+  - [~] É possível criar um usuário com papel "gestor de obra" que aprova requisições e gerencia tarefas — cumprido. "Mas não vê lançamentos de outras obras que não gerencia" fica para a Tarefa 6.2 (dependência já declarada abaixo): hoje gestor_obra não tem acesso financeiro nenhum, nem amplo — postura mais segura até existir o vínculo usuário↔obra que a 6.2 introduz
 
 ### Tarefa 6.2 — Controle de acesso por obra (usuário vinculado a obras específicas dentro da mesma empresa)
 - **Prioridade:** P1
